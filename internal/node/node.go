@@ -2,10 +2,9 @@ package node
 
 import (
     "encoding/json"
-    "fmt"
     "os"
     "sync"
-
+    "gopkg.in/yaml.v3"
     "github.com/google/uuid"
     "github.com/Bastiancito/tarea3/internal/transport"
 )

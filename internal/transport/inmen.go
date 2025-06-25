@@ -1,6 +1,7 @@
 package transport
 
 import "sync"
+import "fmt"
 
 var (
     registry = make(map[int]chan *Envelope)
