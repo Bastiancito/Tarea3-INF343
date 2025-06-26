@@ -5,7 +5,13 @@ import (
     "log"
     "net"
     "net/rpc"
+    "github.com/google/uuid"
 )
+
+type EventRecord struct {
+    ID    uuid.UUID `json:"id"`
+    Value string    `json:"value"`
+}
 
 type rpcTransport struct {
     id     int
@@ -13,6 +19,8 @@ type rpcTransport struct {
     peers  map[int]string
     server *rpc.Server
     ln     net.Listener
+
+    msgChan chan *Envelope
 }
 
 type rpcAPI struct{ parent *rpcTransport }
@@ -63,7 +71,14 @@ func (t *rpcTransport) Broadcast(msg *Envelope) error {
     return nil
 }
 
-func (api *rpcAPI) Handle(msg *Envelope, _ *bool) error {
-    fmt.Printf("[T%d] recv %+v\n", api.parent.id, msg)
+
+func (api *rpcAPI) Handle(msg *Envelope, ack *bool) error {
+    api.parent.msgChan <- msg
+    *ack = true
     return nil
+}
+
+
+func (t *rpcTransport) Receive() <-chan *Envelope {
+    return t.msgChan
 }
