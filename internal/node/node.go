@@ -3,7 +3,10 @@ package node
 import (
     "context"
     "encoding/json"
+    "fmt"
+    "io"
     "log"
+    "os"
     "sync"
     "github.com/google/uuid"
     "github.com/Bastiancito/tarea3/internal/transport"
@@ -19,10 +22,12 @@ type Config struct {
     ElectionTimeoutMs int            `yaml:"election_timeout_ms"`
 }
 
+
 type PersistentState struct {
     Sequence uint64        `json:"sequence_number"`
     Log      []EventRecord `json:"event_log"`
 }
+
 
 type EventRecord struct {
     ID    uuid.UUID `json:"id"`
@@ -40,6 +45,24 @@ type Node struct {
     heartbeatCh chan struct{}
     ctx        context.Context
     cancel     context.CancelFunc
+    logger     *log.Logger  
+}
+
+
+func initLogger(nodeID int) *log.Logger {
+    logFile, err := os.OpenFile(fmt.Sprintf("nodo%d.log", nodeID), 
+        os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    return log.New(io.MultiWriter(os.Stdout, logFile), 
+        "", log.LstdFlags)
+}
+
+
+func (n *Node) log(format string, args ...interface{}) {
+    n.logger.Printf("[Nodo %d] "+format, append([]interface{}{n.cfg.SelfID}, args...)...)
 }
 
 func New(id int, cfgPath, transportKind string) (*Node, error) {
@@ -66,7 +89,7 @@ func New(id int, cfgPath, transportKind string) (*Node, error) {
         return nil, err
     }
 
-    return &Node{
+    node := &Node{
         cfg:        cfg,
         transport:  t,
         state:      ps,
@@ -75,8 +98,13 @@ func New(id int, cfgPath, transportKind string) (*Node, error) {
         electionCh: make(chan struct{}),
         heartbeatCh: make(chan struct{}),
         leaderID:   -1,
-    }, nil
+        logger:     initLogger(cfg.SelfID), 
+    }
+
+    node.log("Iniciando nodo (Transporte: %s)", transportKind)
+    return node, nil
 }
+
 
 func (n *Node) Start() error {
     if err := n.transport.Start(); err != nil {
@@ -104,19 +132,29 @@ func (n *Node) Stop() {
 func (n *Node) handleIncomingMessages(msgChan <-chan *transport.Envelope) {
     for msg := range msgChan {
         switch msg.Type {
+
         case "Heartbeat":
+            // Señal recibida del líder
             n.heartbeatCh <- struct{}{}
+
         case "LeaderAnnouncement":
             n.mu.Lock()
+            prevLeader := n.leaderID
             n.leaderID = msg.From
             n.isLeader = false
             n.mu.Unlock()
+
+            if prevLeader != msg.From {
+                n.log("Nodo %d se ha proclamado como líder", msg.From)
+            }
+
         case "Replicate":
             var event EventRecord
             if err := json.Unmarshal(msg.Data, &event); err != nil {
                 log.Printf("Error decoding event: %v", err)
                 continue
             }
+
             n.mu.Lock()
             n.state.Sequence = msg.Seq
             n.state.Log = append(n.state.Log, event)

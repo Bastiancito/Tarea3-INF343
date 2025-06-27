@@ -19,6 +19,7 @@ func (n *Node) monitorLeader() {
             timer.Reset(heartbeatTimeout)
         case <-timer.C:
             if !n.isLeader {
+                n.log("El líder no responde - iniciando elección")
                 n.electionCh <- struct{}{}
             }
             timer.Reset(heartbeatTimeout)
@@ -32,6 +33,8 @@ func (n *Node) sendHeartbeats() {
     ticker := time.NewTicker(time.Duration(n.cfg.HeartbeatMs) * time.Millisecond)
     defer ticker.Stop()
 
+    n.log("Iniciando envío de heartbeats como líder")
+    
     for {
         select {
         case <-ticker.C:

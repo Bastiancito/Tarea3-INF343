@@ -12,6 +12,7 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
     defer n.mu.Unlock()
 
     if !n.isLeader {
+        n.log("Redirigiendo evento al líder %d", n.leaderID)
         return 0, errors.New("not the leader")
     }
 
@@ -20,6 +21,8 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
         ID:    uuid.New(),
         Value: value,
     }
+
+    n.log("Procesando nuevo evento: %s", value)
     n.state.Log = append(n.state.Log, event)
 
     msg := &transport.Envelope{

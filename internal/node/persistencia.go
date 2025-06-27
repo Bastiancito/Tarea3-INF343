@@ -5,7 +5,7 @@ import (
     "log"
     "os"
     "time"
-    "gopkg.in/yaml.v3"
+    "gopkg.in/yaml.v2"
 )
 
 
