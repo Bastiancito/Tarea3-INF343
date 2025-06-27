@@ -26,7 +26,12 @@ type rpcTransport struct {
 type rpcAPI struct{ parent *rpcTransport }
 
 func NewRPC(id int, addr string, peers map[int]string) Transport {
-    return &rpcTransport{id: id, addr: addr, peers: peers}
+    return &rpcTransport{
+    id:      id,
+    addr:    addr,
+    peers:   peers,
+    msgChan: make(chan *Envelope, 64),
+}
 }
 
 func (t *rpcTransport) Start() error {

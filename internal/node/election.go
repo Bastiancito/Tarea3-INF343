@@ -5,7 +5,6 @@ import (
     "github.com/Bastiancito/tarea3/internal/transport"
 )
 
-// Ejecuta el ciclo de elecciones si no hay líder o el actual falla.
 func (n *Node) runLeaderElection() {
     electionTimer := time.NewTimer(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
     defer electionTimer.Stop()
@@ -18,7 +17,11 @@ func (n *Node) runLeaderElection() {
             }
             electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
 
-        case <-n.electionCh: // señal para reiniciar temporizador de elección
+        case <-n.electionCh:
+            if !n.isLeader {
+                n.log("Se recibió señal de elección")
+                n.startElection()
+            }
             if !electionTimer.Stop() {
                 <-electionTimer.C
             }
@@ -30,12 +33,16 @@ func (n *Node) runLeaderElection() {
     }
 }
 
-// Inicia el algoritmo del matón
 func (n *Node) startElection() {
     n.mu.Lock()
     defer n.mu.Unlock()
 
     n.log("Iniciando elección")
+
+    if n.leaderID != -1 && n.leaderID != n.cfg.SelfID {
+        n.log("Ya hay un líder registrado (%d), no inicio elección", n.leaderID)
+        return
+    }
 
     higherNodes := n.getHigherNodes()
     if len(higherNodes) == 0 {
@@ -76,13 +83,16 @@ WAIT:
         return
     }
 
-    // Si nadie responde, me autoproclamo
     n.becomeLeader()
 }
 
-// Lógica de asumir liderazgo y avisar a los demás
 func (n *Node) becomeLeader() {
     n.isLeader = true
+    if n.leaderID == n.cfg.SelfID {
+        n.log("Ya soy el líder. Ignorando proclamación redundante.")
+        return
+    }
+    
     n.leaderID = n.cfg.SelfID
     n.log("¡Elegido como nuevo líder!")
 
@@ -98,7 +108,6 @@ func (n *Node) becomeLeader() {
     go n.sendHeartbeats()
 }
 
-// Obtiene nodos con mayor ID que yo
 func (n *Node) getHigherNodes() []int {
     var higher []int
     for id := range n.cfg.Peers {

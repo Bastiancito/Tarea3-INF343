@@ -19,7 +19,10 @@ func (n *Node) monitorLeader() {
             timer.Reset(heartbeatTimeout)
         case <-timer.C:
             if !n.isLeader {
-                n.log("El líder no responde - iniciando elección")
+                n.mu.Lock()
+                n.log("El líder %d no responde - iniciando elección", n.leaderID)
+                n.leaderID = -1
+                n.mu.Unlock()
                 n.electionCh <- struct{}{}
             }
             timer.Reset(heartbeatTimeout)

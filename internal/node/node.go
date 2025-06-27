@@ -4,6 +4,7 @@ import (
     "context"
     "encoding/json"
     "fmt"
+    "time"
     "io"
     "log"
     "os"
@@ -114,11 +115,15 @@ func (n *Node) Start() error {
     if rpcTrans, ok := n.transport.(interface{ Receive() <-chan *transport.Envelope }); ok {
         go n.handleIncomingMessages(rpcTrans.Receive())
     }
-    
-    go n.runLeaderElection()
+
     go n.monitorLeader()
     go n.periodicStateSave()
-    
+
+    go func() {
+        time.Sleep(3 * time.Second) 
+        n.runLeaderElection()
+    }()
+
     <-n.ctx.Done()
     return nil
 }
@@ -134,8 +139,19 @@ func (n *Node) handleIncomingMessages(msgChan <-chan *transport.Envelope) {
         switch msg.Type {
 
         case "Heartbeat":
-            // Señal recibida del líder
-            n.heartbeatCh <- struct{}{}
+            n.mu.Lock()
+            if n.leaderID != msg.From {
+                n.log("Heartbeat recibido de nuevo líder %d", msg.From)
+            }
+            n.leaderID = msg.From
+            n.isLeader = (n.cfg.SelfID == msg.From)
+            n.mu.Unlock()
+        
+            select {
+            case n.heartbeatCh <- struct{}{}:
+            default:
+            }
+            
 
         case "LeaderAnnouncement":
             n.mu.Lock()

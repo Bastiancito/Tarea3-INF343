@@ -5,5 +5,5 @@ peers:
   2: "localhost:5001"
   3: "localhost:5002"
 state_file: "node2.json"
-heartbeat_ms: 2000
-election_timeout_ms: 4000
+heartbeat_ms: 500
+election_timeout_ms: 1500
