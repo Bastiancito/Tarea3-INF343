@@ -12,9 +12,7 @@ func (n *Node) monitorLeader() {
             maxID = pid
         }
     }
-
-    initialDelay := time.Duration(maxID-n.cfg.SelfID) *
-        time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond
+    initialDelay := time.Duration(maxID-n.cfg.SelfID) * time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond
     time.Sleep(initialDelay)
 
     heartbeatTicker := time.NewTicker(time.Duration(n.cfg.HeartbeatMs) * time.Millisecond)
@@ -34,7 +32,13 @@ func (n *Node) monitorLeader() {
         case <-n.heartbeatCh:
             electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
         case <-electionTimer.C:
+            n.log("El líder %d no responde - iniciando elección", n.leaderID)
+            n.mu.Lock()
+            n.leaderID = -1
+            n.isLeader = false
+            n.mu.Unlock()
             n.electionCh <- struct{}{}
+            electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
         case <-n.ctx.Done():
             return
         }
