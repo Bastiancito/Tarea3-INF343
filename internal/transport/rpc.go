@@ -69,9 +69,6 @@ func (t *rpcTransport) Send(to int, msg *Envelope) error {
 func (t *rpcTransport) Broadcast(msg *Envelope) error {
     for id := range t.peers {
         if id == t.id { continue }
-        if err := t.Send(id, msg); err != nil {
-            log.Printf("broadcast to %d failed: %v", id, err)
-        }
     }
     return nil
 }
