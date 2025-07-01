@@ -1,9 +1,9 @@
-self_id: 2
-listen_addr: "0.0.0.0:5001"
+self_id: 3
+listen_addr: "0.0.0.0:5002"
 peers:
   1: "10.10.28.41:5000"
-  2: "10.10.28.42:5000"
-  3: "10.10.28.43:5000"
-state_file: "node2.json"
+  2: "10.10.28.42:5001"
+  3: "10.10.28.43:5002"
+state_file: "node3.json"
 heartbeat_ms: 500
 election_timeout_ms: 1500
