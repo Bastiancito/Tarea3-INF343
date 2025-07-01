@@ -150,9 +150,10 @@ func (n *Node) Stop() {
     n.state.Save(n.cfg.StateFile)
 }
 
-func (n *Node) handleIncomingMessages(ch <-chan *transport.Envelope) {
-    for msg := range ch {
+func (n *Node) handleIncomingMessages(msgChan <-chan *transport.Envelope) {
+    for msg := range msgChan {
         switch msg.Type {
+
         case "Heartbeat":
             n.mu.Lock()
             if n.leaderID != msg.From {
@@ -166,7 +167,7 @@ func (n *Node) handleIncomingMessages(ch <-chan *transport.Envelope) {
             default:
             }
 
-        case "LeaderAnnouncement":
+        case "LeaderAnnouncement", "Coordinator":
             n.mu.Lock()
             prev := n.leaderID
             n.leaderID = msg.From
@@ -175,16 +176,30 @@ func (n *Node) handleIncomingMessages(ch <-chan *transport.Envelope) {
             if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
+            select {
+            case n.heartbeatCh <- struct{}{}:
+            default:
+            }
+
+        case "Election":
+            if n.cfg.SelfID > msg.From {
+                n.log("Respondiento a Election de %d con Coordinator", msg.From)
+                reply := &transport.Envelope{
+                    Type: "Coordinator",
+                    From: n.cfg.SelfID,
+                }
+                _ = n.transport.Send(msg.From, reply)
+            }
 
         case "Replicate":
-            var ev EventRecord
-            if err := json.Unmarshal(msg.Data, &ev); err != nil {
-                n.log("Error decodificando evento: %v", err)
+            var event EventRecord
+            if err := json.Unmarshal(msg.Data, &event); err != nil {
+                log.Printf("Error decoding event: %v", err)
                 continue
             }
             n.mu.Lock()
             n.state.Sequence = msg.Seq
-            n.state.Log = append(n.state.Log, ev)
+            n.state.Log = append(n.state.Log, event)
             n.mu.Unlock()
         }
     }
