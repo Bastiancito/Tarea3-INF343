@@ -1,31 +1,22 @@
 package transport
 
 import (
+    "fmt"
     "net"
     "net/rpc"
 )
-
-type Envelope struct {
-    Type string
-    From int
-    Seq  uint64
-    Data []byte
-}
-
-type Transport interface {
-    Start() error
-    Send(peerID int, msg *Envelope) error
-    Broadcast(msg *Envelope) error
-    Close()
-}
 
 type rpcTransport struct {
     id      int
     addr    string
     peers   map[int]string
-    clients map[int]*rpc.Client
     server  *rpc.Server
+    ln      net.Listener
     msgChan chan *Envelope
+}
+
+type rpcAPI struct {
+    parent *rpcTransport
 }
 
 func NewRPC(id int, addr string, peers map[int]string) Transport {
@@ -33,10 +24,9 @@ func NewRPC(id int, addr string, peers map[int]string) Transport {
         id:      id,
         addr:    addr,
         peers:   peers,
-        clients: make(map[int]*rpc.Client),
-        server:  rpc.NewServer(),
         msgChan: make(chan *Envelope, 64),
     }
+    t.server = rpc.NewServer()
     t.server.RegisterName("Node", &rpcAPI{parent: t})
     return t
 }
@@ -46,21 +36,21 @@ func (t *rpcTransport) Start() error {
     if err != nil {
         return err
     }
+    t.ln = ln
     go t.server.Accept(ln)
     return nil
 }
 
-func (t *rpcTransport) Send(peerID int, msg *Envelope) error {
-    client, ok := t.clients[peerID]
+func (t *rpcTransport) Send(to int, msg *Envelope) error {
+    addr, ok := t.peers[to]
     if !ok {
-        addr := t.peers[peerID]
-        c, err := rpc.Dial("tcp", addr)
-        if err != nil {
-            return err
-        }
-        t.clients[peerID] = c
-        client = c
+        return fmt.Errorf("unknown peer %d", to)
     }
+    client, err := rpc.Dial("tcp", addr)
+    if err != nil {
+        return err
+    }
+    defer client.Close()
     var ack bool
     return client.Call("Node.Handle", msg, &ack)
 }
@@ -75,22 +65,23 @@ func (t *rpcTransport) Broadcast(msg *Envelope) error {
     return nil
 }
 
-func (t *rpcTransport) Close() {
-    for _, c := range t.clients {
-        c.Close()
-    }
-}
-
 func (t *rpcTransport) Receive() <-chan *Envelope {
     return t.msgChan
 }
 
-type rpcAPI struct {
-    parent *rpcTransport
+func (t *rpcTransport) Close() error {
+    if t.ln != nil {
+        return t.ln.Close()
+    }
+    return nil
 }
 
-func (r *rpcAPI) Handle(req *Envelope, resp *bool) error {
-    r.parent.msgChan <- req
-    *resp = true
+func (t *rpcTransport) Addr() string {
+    return t.addr
+}
+
+func (api *rpcAPI) Handle(msg *Envelope, ack *bool) error {
+    api.parent.msgChan <- msg
+    *ack = true
     return nil
 }
