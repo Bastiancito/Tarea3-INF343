@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Directorio raíz del proyecto
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
 
 ID=$1

@@ -36,7 +36,7 @@ func NewRPC(id int, addr string, peers map[int]string) Transport {
 
 func (t *rpcTransport) Start() error {
     t.server = rpc.NewServer()
-    if err := t.server.RegisterName("Msg", &rpcAPI{parent: t}); err != nil {
+    if err := t.server.RegisterName("Node", &rpcAPI{parent: t}); err != nil {
         return err
     }
     ln, err := net.Listen("tcp", t.addr)
@@ -52,26 +52,27 @@ func (t *rpcTransport) Start() error {
 func (t *rpcTransport) Close() error { return t.ln.Close() }
 func (t *rpcTransport) Addr() string { return t.addr }
 
-func (t *rpcTransport) Send(to int, msg *Envelope) error {
-    peerAddr, ok := t.peers[to]
+func (t *rpcTransport) Send(peerID int, msg *Envelope) error {
+    client, ok := t.clients[peerID]
     if !ok {
-        return fmt.Errorf("unknown peer %d", to)
+        addr := t.peers[peerID]
+        c, err := rpc.Dial("tcp", addr)
+        if err != nil {
+            return err
+        }
+        t.clients[peerID] = c
+        client = c
     }
-    client, err := rpc.Dial("tcp", peerAddr)
-    if err != nil {
-        return err
-    }
-    defer client.Close()
     var ack bool
-    return client.Call("Msg.Handle", msg, &ack)
+    return client.Call("Node.Handle", msg, &ack)
 }
 
 func (t *rpcTransport) Broadcast(msg *Envelope) error {
-    for id := range t.peers {
-        if id == t.id { continue }
-        if err := t.Send(id, msg); err != nil {
-            log.Printf("broadcast to %d failed: %v", id, err)
+    for peerID := range t.peers {
+        if peerID == t.id {
+            continue
         }
+        _ = t.Send(peerID, msg) 
     }
     return nil
 }

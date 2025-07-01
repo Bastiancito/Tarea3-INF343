@@ -6,26 +6,34 @@ import (
 )
 
 func (n *Node) monitorLeader() {
-    heartbeatTimeout := time.Duration(n.cfg.HeartbeatMs * 3) * time.Millisecond
-    timer := time.NewTimer(heartbeatTimeout)
-    defer timer.Stop()
+    maxID := 0
+    for peerID := range n.cfg.Peers {
+        if peerID > maxID {
+            maxID = peerID
+        }
+    }
+    initialDelay := time.Duration(maxID-n.cfg.SelfID) *
+        time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond
 
+    time.Sleep(initialDelay)
+
+    heartbeatTicker := time.NewTicker(time.Duration(n.cfg.HeartbeatMs) * time.Millisecond)
+    electionTimer := time.NewTimer(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
+    defer heartbeatTicker.Stop()
+    defer electionTimer.Stop()
     for {
         select {
+        case <-heartbeatTicker.C:
+            if n.isLeader {
+                n.transport.Broadcast(&transport.Envelope{
+                    Type: "Heartbeat",
+                    From: n.cfg.SelfID,
+                })
+            }
         case <-n.heartbeatCh:
-            if !timer.Stop() {
-                <-timer.C
-            }
-            timer.Reset(heartbeatTimeout)
-        case <-timer.C:
-            if !n.isLeader {
-                n.mu.Lock()
-                n.log("El líder %d no responde - iniciando elección", n.leaderID)
-                n.leaderID = -1
-                n.mu.Unlock()
-                n.electionCh <- struct{}{}
-            }
-            timer.Reset(heartbeatTimeout)
+            electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
+        case <-electionTimer.C:
+            n.electionCh <- struct{}{}
         case <-n.ctx.Done():
             return
         }
