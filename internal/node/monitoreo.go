@@ -7,20 +7,21 @@ import (
 
 func (n *Node) monitorLeader() {
     maxID := 0
-    for peerID := range n.cfg.Peers {
-        if peerID > maxID {
-            maxID = peerID
+    for pid := range n.cfg.Peers {
+        if pid > maxID {
+            maxID = pid
         }
     }
+
     initialDelay := time.Duration(maxID-n.cfg.SelfID) *
         time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond
-
     time.Sleep(initialDelay)
 
     heartbeatTicker := time.NewTicker(time.Duration(n.cfg.HeartbeatMs) * time.Millisecond)
     electionTimer := time.NewTimer(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
     defer heartbeatTicker.Stop()
     defer electionTimer.Stop()
+
     for {
         select {
         case <-heartbeatTicker.C:
