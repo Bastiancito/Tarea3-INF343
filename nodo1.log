@@ -1,0 +1,162 @@
+2025/06/30 23:29:13 [Nodo 1] Iniciando nodo (Transporte: rpc)
+2025/06/30 23:29:13 [Nodo 1] Heartbeat recibido de nuevo líder 2
+2025/06/30 23:29:17 [Nodo 1] Iniciando elección
+2025/06/30 23:29:17 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:19 [Nodo 1] Iniciando elección
+2025/06/30 23:29:19 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:20 [Nodo 1] Iniciando elección
+2025/06/30 23:29:20 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:22 [Nodo 1] Iniciando elección
+2025/06/30 23:29:22 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:23 [Nodo 1] Iniciando elección
+2025/06/30 23:29:23 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:25 [Nodo 1] Iniciando elección
+2025/06/30 23:29:25 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:26 [Nodo 1] Iniciando elección
+2025/06/30 23:29:26 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:28 [Nodo 1] Iniciando elección
+2025/06/30 23:29:28 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:29 [Nodo 1] Iniciando elección
+2025/06/30 23:29:29 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:31 [Nodo 1] Iniciando elección
+2025/06/30 23:29:31 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:32 [Nodo 1] Iniciando elección
+2025/06/30 23:29:32 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:34 [Nodo 1] Iniciando elección
+2025/06/30 23:29:34 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:35 [Nodo 1] Iniciando elección
+2025/06/30 23:29:35 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:37 [Nodo 1] Iniciando elección
+2025/06/30 23:29:37 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:38 [Nodo 1] Iniciando elección
+2025/06/30 23:29:38 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:40 [Nodo 1] Iniciando elección
+2025/06/30 23:29:40 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:41 [Nodo 1] Iniciando elección
+2025/06/30 23:29:41 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:43 [Nodo 1] Iniciando elección
+2025/06/30 23:29:43 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:44 [Nodo 1] Iniciando elección
+2025/06/30 23:29:44 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:46 [Nodo 1] Iniciando elección
+2025/06/30 23:29:46 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:47 [Nodo 1] Iniciando elección
+2025/06/30 23:29:47 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:49 [Nodo 1] Iniciando elección
+2025/06/30 23:29:49 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:50 [Nodo 1] Iniciando elección
+2025/06/30 23:29:50 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:52 [Nodo 1] Iniciando elección
+2025/06/30 23:29:52 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:53 [Nodo 1] Iniciando elección
+2025/06/30 23:29:53 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:55 [Nodo 1] Iniciando elección
+2025/06/30 23:29:55 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:56 [Nodo 1] Iniciando elección
+2025/06/30 23:29:56 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:58 [Nodo 1] Iniciando elección
+2025/06/30 23:29:58 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:29:59 [Nodo 1] Iniciando elección
+2025/06/30 23:29:59 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:01 [Nodo 1] Iniciando elección
+2025/06/30 23:30:01 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:02 [Nodo 1] Iniciando elección
+2025/06/30 23:30:02 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:04 [Nodo 1] Iniciando elección
+2025/06/30 23:30:04 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:05 [Nodo 1] Iniciando elección
+2025/06/30 23:30:05 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:07 [Nodo 1] Iniciando elección
+2025/06/30 23:30:07 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:08 [Nodo 1] Iniciando elección
+2025/06/30 23:30:08 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:10 [Nodo 1] Iniciando elección
+2025/06/30 23:30:10 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:11 [Nodo 1] Iniciando elección
+2025/06/30 23:30:11 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:13 [Nodo 1] Iniciando elección
+2025/06/30 23:30:13 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:14 [Nodo 1] Iniciando elección
+2025/06/30 23:30:14 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:16 [Nodo 1] Iniciando elección
+2025/06/30 23:30:16 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:17 [Nodo 1] Iniciando elección
+2025/06/30 23:30:17 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:19 [Nodo 1] Iniciando elección
+2025/06/30 23:30:19 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:20 [Nodo 1] Iniciando elección
+2025/06/30 23:30:20 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:22 [Nodo 1] Iniciando elección
+2025/06/30 23:30:22 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:23 [Nodo 1] Iniciando elección
+2025/06/30 23:30:23 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:25 [Nodo 1] Iniciando elección
+2025/06/30 23:30:25 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:26 [Nodo 1] Iniciando elección
+2025/06/30 23:30:26 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:28 [Nodo 1] Iniciando elección
+2025/06/30 23:30:28 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:29 [Nodo 1] Iniciando elección
+2025/06/30 23:30:29 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:31 [Nodo 1] Iniciando elección
+2025/06/30 23:30:31 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:32 [Nodo 1] Iniciando elección
+2025/06/30 23:30:32 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:34 [Nodo 1] Iniciando elección
+2025/06/30 23:30:34 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:35 [Nodo 1] Iniciando elección
+2025/06/30 23:30:35 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:37 [Nodo 1] Iniciando elección
+2025/06/30 23:30:37 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:38 [Nodo 1] Iniciando elección
+2025/06/30 23:30:38 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:40 [Nodo 1] Iniciando elección
+2025/06/30 23:30:40 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:41 [Nodo 1] Iniciando elección
+2025/06/30 23:30:41 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:43 [Nodo 1] Iniciando elección
+2025/06/30 23:30:43 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:44 [Nodo 1] Iniciando elección
+2025/06/30 23:30:44 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:46 [Nodo 1] Iniciando elección
+2025/06/30 23:30:46 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:47 [Nodo 1] Iniciando elección
+2025/06/30 23:30:47 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:49 [Nodo 1] Iniciando elección
+2025/06/30 23:30:49 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:50 [Nodo 1] Iniciando elección
+2025/06/30 23:30:50 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:52 [Nodo 1] Iniciando elección
+2025/06/30 23:30:52 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:53 [Nodo 1] Iniciando elección
+2025/06/30 23:30:53 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:55 [Nodo 1] Iniciando elección
+2025/06/30 23:30:55 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:56 [Nodo 1] Iniciando elección
+2025/06/30 23:30:56 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:58 [Nodo 1] Iniciando elección
+2025/06/30 23:30:58 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:30:59 [Nodo 1] Iniciando elección
+2025/06/30 23:30:59 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:01 [Nodo 1] Iniciando elección
+2025/06/30 23:31:01 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:02 [Nodo 1] Iniciando elección
+2025/06/30 23:31:02 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:04 [Nodo 1] Iniciando elección
+2025/06/30 23:31:04 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:05 [Nodo 1] Iniciando elección
+2025/06/30 23:31:05 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:07 [Nodo 1] Iniciando elección
+2025/06/30 23:31:07 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:08 [Nodo 1] Iniciando elección
+2025/06/30 23:31:08 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:10 [Nodo 1] Iniciando elección
+2025/06/30 23:31:10 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:11 [Nodo 1] Iniciando elección
+2025/06/30 23:31:11 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:13 [Nodo 1] Iniciando elección
+2025/06/30 23:31:13 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:14 [Nodo 1] Iniciando elección
+2025/06/30 23:31:14 [Nodo 1] Ya hay un líder registrado (2), no inicio elección
+2025/06/30 23:31:16 [Nodo 1] Iniciando elección
+2025/06/30 23:31:16 [Nodo 1] Ya hay un líder registrado (2), no inicio elección

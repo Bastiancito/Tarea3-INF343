@@ -178,3 +178,24 @@ func (n *Node) handleIncomingMessages(msgChan <-chan *transport.Envelope) {
         }
     }
 }
+
+func (n *Node) tryReintegration() {
+    n.mu.RLock()
+    leaderID := n.leaderID
+    n.mu.RUnlock()
+
+    if leaderID == -1 || leaderID == n.cfg.SelfID {
+        return
+    }
+
+    n.log("Solicitando estado actual al líder %d...", leaderID)
+
+    msg := &transport.Envelope{
+        Type: "RequestState",
+        From: n.cfg.SelfID,
+    }
+
+    if err := n.transport.Send(leaderID, msg); err != nil {
+        n.log("Error solicitando estado al líder %d: %v", leaderID, err)
+    }
+}

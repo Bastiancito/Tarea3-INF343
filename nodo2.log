@@ -1,0 +1,6 @@
+2025/06/30 23:29:03 [Nodo 2] Iniciando nodo (Transporte: rpc)
+2025/06/30 23:29:05 [Nodo 2] El líder -1 no responde - iniciando elección
+2025/06/30 23:29:06 [Nodo 2] Se recibió señal de elección
+2025/06/30 23:29:06 [Nodo 2] Iniciando elección
+2025/06/30 23:29:06 [Nodo 2] ¡Elegido como nuevo líder!
+2025/06/30 23:29:06 [Nodo 2] Iniciando envío de heartbeats como líder
