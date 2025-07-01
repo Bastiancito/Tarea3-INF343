@@ -1,9 +1,9 @@
 self_id: 1
 listen_addr: "0.0.0.0:5000"
 peers:
-  1: "localhost:5000"
-  2: "localhost:5001"
-  3: "localhost:5002"
+  1: "10.10.28.41:5000"
+  2: "10.10.28.42:5000"
+  3: "10.10.28.43:5000"
 state_file: "node1.json"
 heartbeat_ms: 500
 election_timeout_ms: 1500

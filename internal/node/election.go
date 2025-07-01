@@ -11,19 +11,18 @@ func (n *Node) runLeaderElection() {
 
     for {
         select {
-        case <-electionTimer.C:
-            if !n.isLeader {
-                n.startElection()
-            }
+        case <-n.electionCh:
+            n.log("Se recibió señal de elección")
+            n.startElection()
             electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
 
-        case <-n.electionCh:
-            if !n.isLeader {
-                n.log("Se recibió señal de elección")
+        case <-electionTimer.C:
+            n.mu.RLock()
+            leader := n.leaderID
+            n.mu.RUnlock()
+            if leader == -1 {
+                n.log("ElectionTimeout sin líder, lanzando nueva elección")
                 n.startElection()
-            }
-            if !electionTimer.Stop() {
-                <-electionTimer.C
             }
             electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
 
