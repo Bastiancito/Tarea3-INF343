@@ -66,9 +66,9 @@ func (n *Node) becomeLeader() {
     n.mu.Unlock()
 
     n.log("¡Elegido como nuevo líder!")
-    coord := &transport.Envelope{
-        Type: "Coordinator",
+    announcement := &transport.Envelope{
+        Type: "LeaderAnnouncement",
         From: n.cfg.SelfID,
     }
-    n.transport.Broadcast(coord)
+    n.transport.Broadcast(announcement)
 }
