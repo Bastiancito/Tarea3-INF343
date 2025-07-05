@@ -7,10 +7,12 @@ type Envelope struct {
     Data []byte
 }
 
+
 type Transport interface {
-    Send(to int, msg *Envelope) error
-    Broadcast(msg *Envelope) error
     Start() error
-    Close() error
+    Send(peerID int, msg *Envelope) error
+    Broadcast(msg *Envelope) error
+    Close() error        
     Addr() string
+    Receive() <-chan *Envelope    
 }

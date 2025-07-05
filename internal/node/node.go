@@ -1,16 +1,17 @@
 package node
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "time"
-    "io"
-    "log"
-    "os"
-    "sync"
-    "github.com/google/uuid"
-    "github.com/Bastiancito/tarea3/internal/transport"
+  "context"
+  "encoding/json"
+  "fmt"
+  "io"
+  "log"
+  "os"
+  "sync"
+  "time"
+
+  "github.com/google/uuid"
+  "github.com/Bastiancito/tarea3/internal/transport"
 )
 
 
@@ -46,7 +47,8 @@ type Node struct {
     heartbeatCh chan struct{}
     ctx        context.Context
     cancel     context.CancelFunc
-    logger     *log.Logger  
+    logger     *log.Logger
+    rpcClient  *RPCClient
 }
 
 
@@ -89,17 +91,18 @@ func New(id int, cfgPath, transportKind string) (*Node, error) {
     if err != nil {
         return nil, err
     }
-
+    client := NewRPCClient(cfg.SelfID, cfg.Peers)
     node := &Node{
-        cfg:        cfg,
-        transport:  t,
-        state:      ps,
-        ctx:        ctx,
-        cancel:     cancel,
-        electionCh: make(chan struct{}),
-        heartbeatCh: make(chan struct{}),
-        leaderID:   -1,
-        logger:     initLogger(cfg.SelfID), 
+        cfg:         cfg,
+        transport:   t,
+        state:       ps,
+        ctx:         ctx,
+        cancel:      cancel,
+        electionCh:  make(chan struct{}, 1),
+        heartbeatCh: make(chan struct{}, 1),
+        rpcClient:   client,
+        leaderID:    -1,
+        logger:      initLogger(cfg.SelfID),
     }
 
     node.log("Iniciando nodo (Transporte: %s)", transportKind)
@@ -108,23 +111,31 @@ func New(id int, cfgPath, transportKind string) (*Node, error) {
 
 
 func (n *Node) Start() error {
-    if err := n.transport.Start(); err != nil {
-        return err
-    }
+    n.log("Nodo %d arrancando en %s", n.cfg.SelfID, n.cfg.ListenAddr)
 
-    if rpcTrans, ok := n.transport.(interface{ Receive() <-chan *transport.Envelope }); ok {
-        go n.handleIncomingMessages(rpcTrans.Receive())
-    }
-
-    go n.monitorLeader()
-    go n.periodicStateSave()
-
+    // 1) Servidor RPC / InMem
     go func() {
-        time.Sleep(3 * time.Second) 
-        n.runLeaderElection()
+        if err := n.transport.Start(); err != nil {
+            n.log("Error al arrancar transporte: %v", err)
+            os.Exit(1)
+        }
     }()
 
-    <-n.ctx.Done()
+    n.syncState()
+
+    go n.runLeaderElection()
+
+    go n.monitorLeader()
+
+    go n.periodicStateSave()
+
+    go n.handleIncomingMessages()
+    go func() {
+        time.Sleep(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
+        n.electionCh <- struct{}{} 
+        }(
+        )
+
     return nil
 }
 
@@ -134,46 +145,70 @@ func (n *Node) Stop() {
     n.state.Save(n.cfg.StateFile)
 }
 
-func (n *Node) handleIncomingMessages(msgChan <-chan *transport.Envelope) {
-    for msg := range msgChan {
+func (n *Node) handleIncomingMessages() {
+    for msg := range n.transport.Receive() {
         switch msg.Type {
 
-        case "Heartbeat":
-            n.mu.Lock()
-            if n.leaderID != msg.From {
-                n.log("Heartbeat recibido de nuevo líder %d", msg.From)
-            }
-            n.leaderID = msg.From
-            n.isLeader = (n.cfg.SelfID == msg.From)
-            n.mu.Unlock()
-        
-            select {
-            case n.heartbeatCh <- struct{}{}:
-            default:
-            }
-            
+        case "Ping":
+            _ = n.transport.Send(msg.From, &transport.Envelope{
+                Type: "PingResponse",
+                From: n.cfg.SelfID,
+            })
 
-        case "LeaderAnnouncement":
+        case "PingResponse":
+            select { case n.heartbeatCh <- struct{}{}: default: }
+
+        case "Election":
+            if msg.From < n.cfg.SelfID {
+                _ = n.transport.Send(msg.From, &transport.Envelope{
+                    Type: "Coordinator",
+                    From: n.cfg.SelfID,
+                })
+            }
+
+        case "Coordinator":
             n.mu.Lock()
-            prevLeader := n.leaderID
+            prev := n.leaderID
             n.leaderID = msg.From
             n.isLeader = false
             n.mu.Unlock()
-
-            if prevLeader != msg.From {
+            if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
+            select { case n.heartbeatCh <- struct{}{}: default: }
 
-        case "Replicate":
-            var event EventRecord
-            if err := json.Unmarshal(msg.Data, &event); err != nil {
-                log.Printf("Error decoding event: %v", err)
+        case "RequestState":
+            data, err := json.Marshal(n.state.Log)
+            if err != nil {
+                n.log("Error al serializar estado: %v", err)
                 continue
             }
+            _ = n.transport.Send(msg.From, &transport.Envelope{
+                Type: "StateResponse",
+                From: n.cfg.SelfID,
+                Data: data,
+            })
 
+        case "StateResponse":
+            var recovered []EventRecord
+            if err := json.Unmarshal(msg.Data, &recovered); err != nil {
+                n.log("Error al deserializar StateResponse: %v", err)
+                continue
+            }
+            for _, ev := range recovered {
+                n.applyEvent(ev)
+            }
+            select { case n.heartbeatCh <- struct{}{}: default: }
+
+        case "Replicate":
+            var ev EventRecord
+            if err := json.Unmarshal(msg.Data, &ev); err != nil {
+                n.log("Error al decodificar Replicate: %v", err)
+                continue
+            }
             n.mu.Lock()
             n.state.Sequence = msg.Seq
-            n.state.Log = append(n.state.Log, event)
+            n.state.Log = append(n.state.Log, ev)
             n.mu.Unlock()
         }
     }
@@ -198,4 +233,12 @@ func (n *Node) tryReintegration() {
     if err := n.transport.Send(leaderID, msg); err != nil {
         n.log("Error solicitando estado al líder %d: %v", leaderID, err)
     }
+}
+
+func (n *Node) applyEvent(ev EventRecord) {
+  n.mu.Lock()
+  defer n.mu.Unlock()
+  n.state.Sequence = uint64(len(n.state.Log)) + 1
+  n.state.Log = append(n.state.Log, ev)
+  n.log("Evento aplicado: %s (seq=%d)", ev.Value, n.state.Sequence)
 }

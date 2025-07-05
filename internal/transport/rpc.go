@@ -2,16 +2,11 @@ package transport
 
 import (
     "fmt"
-    "log"
     "net"
     "net/rpc"
-    "github.com/google/uuid"
 )
 
-type EventRecord struct {
-    ID    uuid.UUID `json:"id"`
-    Value string    `json:"value"`
-}
+
 
 type rpcTransport struct {
     id     int
@@ -26,51 +21,58 @@ type rpcTransport struct {
 type rpcAPI struct{ parent *rpcTransport }
 
 func NewRPC(id int, addr string, peers map[int]string) Transport {
-    return &rpcTransport{
-    id:      id,
-    addr:    addr,
-    peers:   peers,
-    msgChan: make(chan *Envelope, 64),
-}
+    t := &rpcTransport{
+        id:      id,
+        addr:    addr,
+        peers:   peers,
+        msgChan: make(chan *Envelope, 64),
+    }
+    t.server = rpc.NewServer()
+    t.server.RegisterName("Node", &rpcAPI{parent: t})
+    return t
 }
 
 func (t *rpcTransport) Start() error {
-    t.server = rpc.NewServer()
-    if err := t.server.RegisterName("Msg", &rpcAPI{parent: t}); err != nil {
-        return err
-    }
     ln, err := net.Listen("tcp", t.addr)
     if err != nil {
         return err
     }
     t.ln = ln
     go t.server.Accept(ln)
-    log.Printf("[T%d] RPC listening on %s", t.id, t.addr)
     return nil
 }
 
-func (t *rpcTransport) Close() error { return t.ln.Close() }
-func (t *rpcTransport) Addr() string { return t.addr }
-
 func (t *rpcTransport) Send(to int, msg *Envelope) error {
-    peerAddr, ok := t.peers[to]
+    addr, ok := t.peers[to]
     if !ok {
         return fmt.Errorf("unknown peer %d", to)
     }
-    client, err := rpc.Dial("tcp", peerAddr)
+    client, err := rpc.Dial("tcp", addr)
     if err != nil {
         return err
     }
     defer client.Close()
     var ack bool
-    return client.Call("Msg.Handle", msg, &ack)
+    return client.Call("Node.Handle", msg, &ack)
+}
+
+func (t *rpcTransport) Close() error {
+    return t.ln.Close()
 }
 
 func (t *rpcTransport) Broadcast(msg *Envelope) error {
     for id := range t.peers {
-        if id == t.id { continue }
+        if id == t.id {
+            continue
+        }
+        _ = t.Send(id, msg)  
     }
     return nil
+}
+
+
+func (t *rpcTransport) Addr() string {
+    return t.addr
 }
 
 
@@ -79,7 +81,6 @@ func (api *rpcAPI) Handle(msg *Envelope, ack *bool) error {
     *ack = true
     return nil
 }
-
 
 func (t *rpcTransport) Receive() <-chan *Envelope {
     return t.msgChan

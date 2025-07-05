@@ -2,53 +2,37 @@ package node
 
 import (
     "time"
-    "github.com/Bastiancito/tarea3/internal/transport"
 )
 
+
 func (n *Node) monitorLeader() {
-    heartbeatTimeout := time.Duration(n.cfg.HeartbeatMs * 3) * time.Millisecond
-    timer := time.NewTimer(heartbeatTimeout)
-    defer timer.Stop()
-
-    for {
-        select {
-        case <-n.heartbeatCh:
-            if !timer.Stop() {
-                <-timer.C
-            }
-            timer.Reset(heartbeatTimeout)
-        case <-timer.C:
-            if !n.isLeader {
-                n.mu.Lock()
-                n.log("El líder %d no responde - iniciando elección", n.leaderID)
-                n.leaderID = -1
-                n.mu.Unlock()
-                n.electionCh <- struct{}{}
-            }
-            timer.Reset(heartbeatTimeout)
-        case <-n.ctx.Done():
-            return
-        }
-    }
-}
-
-func (n *Node) sendHeartbeats() {
     ticker := time.NewTicker(time.Duration(n.cfg.HeartbeatMs) * time.Millisecond)
     defer ticker.Stop()
 
-    n.log("Iniciando envío de heartbeats como líder")
-    
+    timeout := time.NewTimer(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
+    defer timeout.Stop()
+
     for {
         select {
         case <-ticker.C:
-            msg := &transport.Envelope{
-                Type: "Heartbeat",
-                From: n.cfg.SelfID,
-                Seq:  n.state.Sequence,
+            if n.leaderID != -1 && n.leaderID != n.cfg.SelfID {
+                alive, err := n.rpcClient.Ping(n.leaderID)
+                if err != nil || !alive {
+                    n.log("El líder %d no responde - iniciando elección", n.leaderID)
+                    n.electionCh <- struct{}{}
+                }
             }
-            n.transport.Broadcast(msg)
+
+        case <-n.heartbeatCh:
+            timeout.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
+
+        case <-timeout.C:
+            n.log("Timeout sin latidos del líder, iniciando elección")
+            n.electionCh <- struct{}{}
+
         case <-n.ctx.Done():
             return
         }
     }
 }
+

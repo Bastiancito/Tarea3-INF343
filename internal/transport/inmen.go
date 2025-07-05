@@ -22,8 +22,14 @@ func NewInMemory(id int) Transport {
 }
 
 func (t *inMemory) Start() error { return nil }
-func (t *inMemory) Close() error { close(t.inbox); return nil }
-func (t *inMemory) Addr() string { return "inmem" }
+func (t *inMemory) Close() error {
+    close(t.inbox)
+    return nil
+}
+
+func (t *inMemory) Addr() string {
+    return "inmem"
+}
 
 func (t *inMemory) Send(to int, msg *Envelope) error {
     regMu.RLock()
@@ -46,4 +52,8 @@ func (t *inMemory) Broadcast(msg *Envelope) error {
         ch <- msg
     }
     return nil
+}
+
+func (t *inMemory) Receive() <-chan *Envelope {
+    return t.inbox
 }

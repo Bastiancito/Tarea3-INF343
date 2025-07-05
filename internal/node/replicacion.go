@@ -16,23 +16,16 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
     }
 
     n.state.Sequence++
-    event := EventRecord{
-        ID:    uuid.New(),
-        Value: value,
-    }
-    n.state.Log = append(n.state.Log, event)
+    ev := EventRecord{ID: uuid.New(), Value: value}
+    n.state.Log = append(n.state.Log, ev)
 
     msg := &transport.Envelope{
         Type: "Replicate",
         From: n.cfg.SelfID,
         Seq:  n.state.Sequence,
-        Data: n.eventToBytes(event),
+        Data: n.eventToBytes(ev),
     }
-
-    if err := n.transport.Broadcast(msg); err != nil {
-        return 0, err
-    }
-
+    _ = n.transport.Broadcast(msg)
     return n.state.Sequence, nil
 }
 
@@ -40,3 +33,4 @@ func (n *Node) eventToBytes(event EventRecord) []byte {
     data, _ := json.Marshal(event)
     return data
 }
+

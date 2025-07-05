@@ -6,26 +6,11 @@ import (
 )
 
 func (n *Node) runLeaderElection() {
-    electionTimer := time.NewTimer(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
-    defer electionTimer.Stop()
-
     for {
         select {
         case <-n.electionCh:
             n.log("Se recibió señal de elección")
             n.startElection()
-            electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
-
-        case <-electionTimer.C:
-            n.mu.RLock()
-            leader := n.leaderID
-            n.mu.RUnlock()
-            if leader == -1 {
-                n.log("ElectionTimeout sin líder, lanzando nueva elección")
-                n.startElection()
-            }
-            electionTimer.Reset(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
-
         case <-n.ctx.Done():
             return
         }
@@ -34,84 +19,57 @@ func (n *Node) runLeaderElection() {
 
 func (n *Node) startElection() {
     n.mu.Lock()
-    defer n.mu.Unlock()
+    n.leaderID = -1
+    n.isLeader = false
+    n.mu.Unlock()
 
-    n.log("Iniciando elección")
-
-    if n.leaderID != -1 && n.leaderID != n.cfg.SelfID {
-        n.log("Ya hay un líder registrado (%d), no inicio elección", n.leaderID)
-        return
-    }
-
-    higherNodes := n.getHigherNodes()
-    if len(higherNodes) == 0 {
+    higher := n.getHigherPeers()
+    if len(higher) == 0 {
         n.becomeLeader()
         return
     }
 
-    msg := &transport.Envelope{
-        Type: "Election",
-        From: n.cfg.SelfID,
+    responses := make(chan bool, len(higher))
+    for _, pid := range higher {
+        go func(id int) {
+            ok, _ := n.rpcClient.Election(id)
+            responses <- ok
+        }(pid)
     }
 
-    responses := make(chan bool, len(higherNodes))
-    for _, id := range higherNodes {
-        go func(peerID int) {
-            err := n.transport.Send(peerID, msg)
-            responses <- (err == nil)
-        }(id)
-    }
+    timer := time.NewTimer(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
+    defer timer.Stop()
 
-    timeout := time.After(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
-    receivedResponse := false
-
-WAIT:
-    for i := 0; i < len(higherNodes); i++ {
-        select {
-        case ok := <-responses:
-            if ok {
-                receivedResponse = true
-            }
-        case <-timeout:
-            break WAIT
+    select {
+    case ok := <-responses:
+        if ok {
+            n.log("Esperando anuncio de líder de mayor ID")
+            return
         }
-    }
-
-    if receivedResponse {
-        n.log("Esperando que un nodo con mayor ID se proclame líder...")
-        return
+    case <-timer.C:
     }
 
     n.becomeLeader()
 }
 
 func (n *Node) becomeLeader() {
+    n.mu.Lock()
     n.isLeader = true
-    if n.leaderID == n.cfg.SelfID {
-        n.log("Ya soy el líder. Ignorando proclamación redundante.")
-        return
-    }
-    
     n.leaderID = n.cfg.SelfID
+    n.mu.Unlock()
+
     n.log("¡Elegido como nuevo líder!")
-
-    msg := &transport.Envelope{
-        Type: "LeaderAnnouncement",
+    _ = n.transport.Broadcast(&transport.Envelope{
+        Type: "Coordinator",
         From: n.cfg.SelfID,
-    }
-
-    if err := n.transport.Broadcast(msg); err != nil {
-        n.log("Error anunciando liderazgo: %v", err)
-    }
-
-    go n.sendHeartbeats()
+    })
 }
 
-func (n *Node) getHigherNodes() []int {
+func (n *Node) getHigherPeers() []int {
     var higher []int
-    for id := range n.cfg.Peers {
-        if id > n.cfg.SelfID {
-            higher = append(higher, id)
+    for peerID := range n.cfg.Peers {
+        if peerID > n.cfg.SelfID {
+            higher = append(higher, peerID)
         }
     }
     return higher
