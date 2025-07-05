@@ -112,7 +112,6 @@ func New(id int, cfgPath, transportKind string) (*Node, error) {
 func (n *Node) Start() error {
     n.log("Nodo %d arrancando en %s", n.cfg.SelfID, n.cfg.ListenAddr)
 
-    // 1) Servidor RPC / InMem
     go func() {
         if err := n.transport.Start(); err != nil {
             n.log("Error al arrancar transporte: %v", err)
