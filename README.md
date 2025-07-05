@@ -1,28 +1,23 @@
+## Instrucciones de ejecucion
+
 Al entrar a las máquinas
 Hacer cd Tarea3-INF343
 
-Para iniciar los nodos, en cada MV.
-pkill -f "bin/node"
-rm -f node_*.pid
-chmod +x scripts/start.sh scripts/start_all.sh scripts/simulate_fail.sh
+Para iniciar los nodos, en cada MV, se deben compilar todos los archivos con el comando:
 
-Luego por cada MV:
-./scripts/start.sh 2
+make build
 
-./scripts/start.sh 1
+Luego de esto, cada nodo se ejecuta con el comando:
 
-./scripts/start.sh 3
+make runX ; siendo X el numero del nodo, por ejemplo para ejecutar el Nodo 2 es:
 
-y para ver los logs:
-tail -f node1.log
+make run2
 
-tail -f node2.log
+Luego si se desea detener un nodo, simplemente se realiza CTRL + C dentro de la terminal, y el algoritmo del Maton
+elegira un nuevo lider si lo ve necesario.
 
-tail -f node3.log
+## Integrantes
 
-
-Para detener algún nodo:
-
-cd script
-
-./simulate_fail.sh 3
+-Bastian Camus Jansson 202173013-3
+-Rosario Bregante 202173078-8
+-Benjamin Vilches 202173101-6
