@@ -130,11 +130,7 @@ func (n *Node) Start() error {
     go n.periodicStateSave()
 
     go n.handleIncomingMessages()
-    go func() {
-        time.Sleep(time.Duration(n.cfg.ElectionTimeoutMs) * time.Millisecond)
-        n.electionCh <- struct{}{} 
-        }(
-        )
+    
 
     return nil
 }
