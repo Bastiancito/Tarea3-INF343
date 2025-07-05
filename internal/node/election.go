@@ -18,22 +18,27 @@ func (n *Node) runLeaderElection() {
 }
 
 func (n *Node) startElection() {
-    n.mu.Lock()
-    n.leaderID = -1
-    n.isLeader = false
-    n.mu.Unlock()
+    n.log("Timeout sin latidos del líder, iniciando elección")
 
-    higher := n.getHigherPeers()
+    higher := make([]int, 0, len(n.cfg.Peers))
+    for peerID := range n.cfg.Peers {
+        if peerID > n.cfg.SelfID {
+            higher = append(higher, peerID)
+        }
+    }
+
     if len(higher) == 0 {
         n.becomeLeader()
         return
     }
 
-    responses := make(chan bool, len(higher))
+    responses := make(chan struct{}, len(higher))
     for _, pid := range higher {
         go func(id int) {
             ok, _ := n.rpcClient.Election(id)
-            responses <- ok
+            if ok {
+                responses <- struct{}{}
+            }
         }(pid)
     }
 
@@ -41,11 +46,9 @@ func (n *Node) startElection() {
     defer timer.Stop()
 
     select {
-    case ok := <-responses:
-        if ok {
-            n.log("Esperando anuncio de líder de mayor ID")
-            return
-        }
+    case <-responses:
+        n.log("Esperando anuncio de líder de mayor ID")
+        return
     case <-timer.C:
     }
 
