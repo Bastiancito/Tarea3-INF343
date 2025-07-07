@@ -192,12 +192,15 @@ func (n *Node) handleIncomingMessages() {
             n.mu.Lock()
             prev := n.leaderID
             n.leaderID = msg.From
-            n.isLeader = false
+            n.isLeader = (msg.From == n.cfg.SelfID )
             n.mu.Unlock()
+            n.resetElectionTimer()
             if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
-            go n.tryReintegration()
+            if !n.isLeader{
+                go n.tryReintegration()
+            }
             select { case n.heartbeatCh <- struct{}{}: default: }
 
         case transport.EnvelopeTypeRequestState:
