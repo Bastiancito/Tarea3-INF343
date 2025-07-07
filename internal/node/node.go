@@ -255,7 +255,7 @@ func (n *Node) handleIncomingMessages() {
             if err := n.state.Save(n.cfg.StateFile); err != nil {
                 n.log("Error al persistir evento replicado: %v", err)
             }
-            
+
 
         default:
             n.log("Mensaje desconocido de tipo %q de nodo %d", msg.Type, msg.From)
@@ -287,9 +287,13 @@ func (n *Node) tryReintegration() {
 func (n *Node) applyEvent(ev EventRecord) {
   n.mu.Lock()
   defer n.mu.Unlock()
-  if len(n.state.Log) > 0 && n.state.Log[len(n.state.Log)-1].ID == ev.ID {
-    return
+  for _, existing := range n.state.Log {
+    if existing.ID == ev.ID {
+      n.log("Evento ya existe en el log: %s (seq=%d)", ev.Value, n.state.Sequence)
+      return
+    }
   }
+
   n.state.Log = append(n.state.Log, ev)
   n.state.Sequence = uint64(len(n.state.Log))
   n.log("Evento aplicado: %s (seq=%d)", ev.Value, n.state.Sequence)

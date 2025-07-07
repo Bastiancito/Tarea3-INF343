@@ -9,30 +9,37 @@ import (
 )
 
 func (n *Node) ProcessEvent(value string) (uint64, error) {
-    n.mu.Lock()
-    defer n.mu.Unlock()
-
     if !n.isLeader {
         return 0, errors.New("not the leader")
     }
 
-    n.state.Sequence++
     ev := EventRecord{ID: uuid.New(), Value: value}
+    data := n.eventToBytes(ev)
+
+    n.mu.RLock()
+    nextSeq := n.state.Sequence + 1
+    n.mu.RUnlock()
+
+    msg := &transport.Envelope{
+        Type: transport.EnvelopeTypeReplicate,
+        From: n.cfg.SelfID,
+        Seq:  nextSeq,
+        Data: data,
+    }
+
+    if err := n.transport.Broadcast(msg); err != nil {
+        return 0, fmt.Errorf("failed to broadcast event: %v", err)
+    }
+    n.mu.Lock()
+    defer n.mu.Unlock()
+
+    n.state.Sequence = nextSeq
     n.state.Log = append(n.state.Log, ev)
     if err := n.state.Save(n.cfg.StateFile); err != nil {
         return 0, fmt.Errorf("failed to save state: %v", err)
     }
 
-    msg := &transport.Envelope{
-        Type: transport.EnvelopeTypeReplicate,
-        From: n.cfg.SelfID,
-        Seq:  n.state.Sequence,
-        Data: n.eventToBytes(ev),
-    }
-    if err := n.transport.Broadcast(msg); err != nil {
-        return 0, fmt.Errorf("failed to broadcast event: %v", err)
-    }
-    return n.state.Sequence, nil    
+    return nextSeq, nil
 }
 
 func (n *Node) eventToBytes(event EventRecord) []byte {
