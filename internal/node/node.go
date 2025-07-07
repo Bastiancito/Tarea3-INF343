@@ -223,34 +223,28 @@ func (n *Node) handleIncomingMessages() {
             select { case n.heartbeatCh <- struct{}{}: default: }
 
         case transport.EnvelopeTypeSubmitEvent:
-            // 1) Deserializar petición
             var req struct{ Value string }
             if err := json.Unmarshal(msg.Data, &req); err != nil {
                 n.log("Error al decodificar SubmitEvent: %v", err)
                 continue
             }
-            // 2) Solo el líder procesa
             if !n.isLeader {
                 continue
             }
-            // 3) Generar y persistir el evento
             seq, err := n.ProcessEvent(req.Value)
             if err != nil {
                 n.log("SubmitEvent rechazado (no soy líder): %v", err)
                 continue
             }
             n.log("SubmitEvent procesado: \"%s\" (seq=%d)", req.Value, seq)
-            // 4) Recuperar el EventRecord nuevo
             n.mu.RLock()
             ev := n.state.Log[len(n.state.Log)-1]
             n.mu.RUnlock()
-            // 5) Serializarlo
             data, err := json.Marshal(ev)
             if err != nil {
                 n.log("Error al serializar evento para replicar: %v", err)
                 continue
             }
-            // 6) Replicar a todos los secundarios
             env := &transport.Envelope{
                 Type: transport.EnvelopeTypeReplicate,
                 From: n.cfg.SelfID,
