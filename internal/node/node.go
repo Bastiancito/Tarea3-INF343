@@ -113,7 +113,6 @@ func New(id int, cfgPath, transportKind string) (*Node, error) {
 func (n *Node) Start() error {
     n.log("Nodo %d arrancando en %s", n.cfg.SelfID, n.cfg.ListenAddr)
 
-    // 1) Servidor RPC / InMem
     go func() {
         if err := n.transport.Start(); err != nil {
             n.log("Error al arrancar transporte: %v", err)
@@ -126,15 +125,16 @@ func (n *Node) Start() error {
         n.tryReintegration()
     }()
 
+    
+    go n.handleIncomingMessages()
     n.syncState()
-
     go n.runLeaderElection()
 
     go n.monitorLeader()
 
     go n.periodicStateSave()
 
-    go n.handleIncomingMessages()
+    
 
     n.StartEventSimulation(3 * time.Second)
     
@@ -250,13 +250,12 @@ func (n *Node) handleIncomingMessages() {
                 n.log("Error al decodificar Replicate: %v", err)
                 continue
             }
-            n.mu.Lock()
             n.applyEvent(ev)
+            n.log("Evento replicado de %d: %s (seq=%d)", msg.From, ev.Value, n.state.Sequence)
             if err := n.state.Save(n.cfg.StateFile); err != nil {
-                n.log("Error al persistir Replicate: %v", err)
+                n.log("Error al persistir evento replicado: %v", err)
             }
             
-            n.mu.Unlock()
 
         default:
             n.log("Mensaje desconocido de tipo %q de nodo %d", msg.Type, msg.From)
