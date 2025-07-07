@@ -251,11 +251,11 @@ func (n *Node) handleIncomingMessages() {
                 continue
             }
             n.mu.Lock()
-            n.state.Sequence = msg.Seq
-            n.state.Log = append(n.state.Log, ev)
+            n.applyEvent(ev)
             if err := n.state.Save(n.cfg.StateFile); err != nil {
-                n.log("Error persistiendo replica: %v", err)
+                n.log("Error al persistir Replicate: %v", err)
             }
+            
             n.mu.Unlock()
 
         default:
@@ -291,7 +291,7 @@ func (n *Node) applyEvent(ev EventRecord) {
   if len(n.state.Log) > 0 && n.state.Log[len(n.state.Log)-1].ID == ev.ID {
     return
   }
-  n.state.Sequence = uint64(len(n.state.Log)) + 1
   n.state.Log = append(n.state.Log, ev)
+  n.state.Sequence = uint64(len(n.state.Log))
   n.log("Evento aplicado: %s (seq=%d)", ev.Value, n.state.Sequence)
 }

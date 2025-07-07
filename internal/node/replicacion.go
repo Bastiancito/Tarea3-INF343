@@ -3,6 +3,7 @@ package node
 import (
     "encoding/json"
     "errors"
+    "fmt"
     "github.com/google/uuid"
     "github.com/Bastiancito/tarea3/internal/transport"
 )
