@@ -128,27 +128,34 @@ func (n *Node) Start() error {
         }
     }()
 
-    go func(){
-        time.Sleep(200 * time.Millisecond) 
-        n.tryReintegration()
+    go func() {
+        time.Sleep(200 * time.Millisecond)
+        drainTimeout := time.After(50 * time.Millisecond)
+        for {
+            select {
+            case <-n.transport.Receive():
+            case <-drainTimeout:
+                n.log("Transportes drenados, arrancando lógica interna")
+                select {
+                case n.electionCh <- struct{}{}:
+                default:
+                }
+                return
+            }
+        }
     }()
 
-    
     go n.handleIncomingMessages()
     n.syncState()
-    go n.runLeaderElection()
-    select {case n.electionCh <- struct{}{}: default: }
-    go n.monitorLeader()
 
+    go n.runLeaderElection()
+    go n.monitorLeader()
     go n.periodicStateSave()
 
-    
-
     n.StartEventSimulation(3 * time.Second)
-    
-
     return nil
 }
+
 
 func (n *Node) Stop() {
     status := struct {

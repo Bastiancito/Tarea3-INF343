@@ -17,14 +17,16 @@ func (n *Node) StartEventSimulation(interval time.Duration) {
             select {
             case <-n.ctx.Done():
                 return
+
             case <-ticker.C:
                 n.mu.RLock()
                 isLeader := n.isLeader
                 leaderID := n.leaderID
                 n.mu.RUnlock()
-				if leaderID <0{
-					continue
-				}
+
+                if leaderID < 0 && !isLeader {
+                    continue
+                }
 
                 value := fmt.Sprintf("SimEvent-%s", uuid.New().String()[:8])
                 n.log("Generando evento simulado: %s", value)
