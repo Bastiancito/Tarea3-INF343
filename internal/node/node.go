@@ -194,7 +194,7 @@ func (n *Node) handleIncomingMessages() {
             n.leaderID = msg.From
             n.isLeader = (msg.From == n.cfg.SelfID )
             n.mu.Unlock()
-            n.resetElectionTimer()
+            select { case n.heartbeatCh <- struct{}{}: default: }
             if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
