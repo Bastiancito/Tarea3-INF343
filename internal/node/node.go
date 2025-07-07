@@ -138,11 +138,28 @@ func (n *Node) Start() error {
 }
 
 func (n *Node) Stop() {
+    status := struct {
+       ID           int    `json:"id"`
+       IsPrimary    bool   `json:"is_primary"`
+       LastMessage  string `json:"last_message"`
+   }{
+       ID:          n.cfg.SelfID,
+       IsPrimary:   n.isLeader,
+       LastMessage: time.Now().Format(time.RFC3339),
+   }
+   n.log("Estado final: id=%d, is_primary=%t, last_message=%s",
+       status.ID, status.IsPrimary, status.LastMessage)
+   if b, err := json.MarshalIndent(status, "", "  "); err == nil {
+       _ = os.WriteFile(
+           fmt.Sprintf("status%d.json", n.cfg.SelfID),
+           b, 0644,
+       )
+   }
     n.cancel()
     n.transport.Close()
     n.state.Save(n.cfg.StateFile)
     n.log("Estado final: secuencia=%d, total eventos=%d",
-      n.state.Sequence, len(n.state.Log))
+       n.state.Sequence, len(n.state.Log))
 }
 
 func (n *Node) handleIncomingMessages() {
