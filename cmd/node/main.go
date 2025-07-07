@@ -6,6 +6,7 @@ import (
     "os"
     "os/signal"
     "syscall"
+
     "github.com/Bastiancito/tarea3/internal/node"
 )
 
@@ -25,11 +26,14 @@ func main() {
         log.Fatalf("New node: %v", err)
     }
 
+    if err := nd.Start(); err != nil {
+        log.Fatalf("Node.Start failed: %v", err)
+    }
+
     sigs := make(chan os.Signal, 1)
     signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-    <- sigs
+    <-sigs
 
-
-    log.Println("Deteniendo nodo...")
+    log.Println("Deteniendo nodo…")
     nd.Stop()
 }
