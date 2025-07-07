@@ -197,6 +197,7 @@ func (n *Node) handleIncomingMessages() {
             if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
+            go n.tryReintegration()
             select { case n.heartbeatCh <- struct{}{}: default: }
 
         case transport.EnvelopeTypeRequestState:
@@ -296,6 +297,9 @@ func (n *Node) tryReintegration() {
 func (n *Node) applyEvent(ev EventRecord) {
   n.mu.Lock()
   defer n.mu.Unlock()
+  if len(n.state.Log) > 0 && n.state.Log[len(n.state.Log)-1].ID == ev.ID {
+    return
+  }
   n.state.Sequence = uint64(len(n.state.Log)) + 1
   n.state.Log = append(n.state.Log, ev)
   n.log("Evento aplicado: %s (seq=%d)", ev.Value, n.state.Sequence)
