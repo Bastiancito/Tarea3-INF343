@@ -18,15 +18,20 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
     n.state.Sequence++
     ev := EventRecord{ID: uuid.New(), Value: value}
     n.state.Log = append(n.state.Log, ev)
+    if err := n.state.Save(n.cfg.StateFile); err != nil {
+        return 0, fmt.Errorf("failed to save state: %v", err)
+    }
 
     msg := &transport.Envelope{
-        Type: "Replicate",
+        Type: transport.EnvelopeTypeReplicate,
         From: n.cfg.SelfID,
         Seq:  n.state.Sequence,
         Data: n.eventToBytes(ev),
     }
-    _ = n.transport.Broadcast(msg)
-    return n.state.Sequence, nil
+    if err := n.transport.Broadcast(msg); err != nil {
+        return 0, fmt.Errorf("failed to broadcast event: %v", err)
+    }
+    return n.state.Sequence, nil    
 }
 
 func (n *Node) eventToBytes(event EventRecord) []byte {

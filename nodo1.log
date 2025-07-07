@@ -1,0 +1,75 @@
+2025/07/07 02:48:35 [Nodo 1] Iniciando nodo (Transporte: rpc)
+2025/07/07 02:48:35 [Nodo 1] Nodo 1 arrancando en 0.0.0.0:5000
+2025/07/07 02:48:35 [Nodo 1] Error solicitando estado a 2: dial tcp 10.10.28.42:5001: connect: connection refused
+2025/07/07 02:48:35 [Nodo 1] Error solicitando estado a 3: dial tcp 10.10.28.43:5002: connect: connection refused
+2025/07/07 02:48:37 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:48:37 [Nodo 1] Se recibió señal de elección
+2025/07/07 02:48:37 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:48:38 [Nodo 1] Generando evento simulado: SimEvent-bf0fa2ef
+2025/07/07 02:48:38 [Nodo 1] ¡Elegido como nuevo líder!
+2025/07/07 02:48:40 [Nodo 1] SubmitEvent procesado: "SimEvent-31040bb8" (seq=1)
+2025/07/07 02:48:40 [Nodo 1] Error al enviar Replicate: dial tcp 10.10.28.43:5002: connect: connection refused
+2025/07/07 02:48:41 [Nodo 1] Generando evento simulado: SimEvent-eec7a4fe
+2025/07/07 02:48:41 [Nodo 1] Evento simulado procesado localmente (seq=2)
+2025/07/07 02:48:43 [Nodo 1] SubmitEvent procesado: "SimEvent-835bb7db" (seq=3)
+2025/07/07 02:48:43 [Nodo 1] Error al enviar Replicate: dial tcp 10.10.28.43:5002: connect: connection refused
+2025/07/07 02:48:44 [Nodo 1] Generando evento simulado: SimEvent-a24fc69b
+2025/07/07 02:48:44 [Nodo 1] Evento simulado procesado localmente (seq=4)
+2025/07/07 02:48:46 [Nodo 1] SubmitEvent procesado: "SimEvent-3a0efd64" (seq=5)
+2025/07/07 02:48:46 [Nodo 1] Error al enviar Replicate: dial tcp 10.10.28.43:5002: connect: connection refused
+2025/07/07 02:48:47 [Nodo 1] Generando evento simulado: SimEvent-410f879c
+2025/07/07 02:48:47 [Nodo 1] Evento simulado procesado localmente (seq=6)
+2025/07/07 02:48:49 [Nodo 1] SubmitEvent procesado: "SimEvent-e8205452" (seq=7)
+2025/07/07 02:48:50 [Nodo 1] Generando evento simulado: SimEvent-824036dc
+2025/07/07 02:48:50 [Nodo 1] Evento simulado procesado localmente (seq=8)
+2025/07/07 02:48:51 [Nodo 1] Nodo 3 se ha proclamado como líder
+2025/07/07 02:48:51 [Nodo 1] Solicitando estado actual al líder 3...
+2025/07/07 02:48:51 [Nodo 1] Evento aplicado: SimEvent-e8205452 (seq=9)
+2025/07/07 02:48:51 [Nodo 1] Evento aplicado: SimEvent-824036dc (seq=10)
+2025/07/07 02:48:53 [Nodo 1] Generando evento simulado: SimEvent-c7bed933
+2025/07/07 02:48:56 [Nodo 1] Generando evento simulado: SimEvent-407a5732
+2025/07/07 02:48:59 [Nodo 1] Generando evento simulado: SimEvent-1b50aa98
+2025/07/07 02:49:02 [Nodo 1] Generando evento simulado: SimEvent-7fa350c8
+2025/07/07 02:49:03 [Nodo 1] El líder 3 no responde - iniciando elección
+2025/07/07 02:49:03 [Nodo 1] Se recibió señal de elección
+2025/07/07 02:49:03 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:49:03 [Nodo 1] Esperando anuncio de líder de mayor ID
+2025/07/07 02:49:03 [Nodo 1] Nodo 2 se ha proclamado como líder
+2025/07/07 02:49:03 [Nodo 1] Solicitando estado actual al líder 2...
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-31040bb8 (seq=31)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-eec7a4fe (seq=32)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-835bb7db (seq=33)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-a24fc69b (seq=34)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-3a0efd64 (seq=35)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-410f879c (seq=36)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-e8205452 (seq=37)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-824036dc (seq=38)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-e8205452 (seq=39)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-824036dc (seq=40)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-7b5b7a53 (seq=41)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-606cc8a2 (seq=42)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-c7bed933 (seq=43)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-c6f51bfb (seq=44)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-b315b7ad (seq=45)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-407a5732 (seq=46)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-a877b848 (seq=47)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-10af74a4 (seq=48)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-1b50aa98 (seq=49)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-8a46791d (seq=50)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-7ee0af7a (seq=51)
+2025/07/07 02:49:03 [Nodo 1] Evento aplicado: SimEvent-7fa350c8 (seq=52)
+2025/07/07 02:49:04 [Nodo 1] El líder 2 no responde - iniciando elección
+2025/07/07 02:49:04 [Nodo 1] Se recibió señal de elección
+2025/07/07 02:49:04 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:49:05 [Nodo 1] El líder 2 no responde - iniciando elección
+2025/07/07 02:49:05 [Nodo 1] Generando evento simulado: SimEvent-13c85454
+2025/07/07 02:49:05 [Nodo 1] El líder 2 no responde - iniciando elección
+2025/07/07 02:49:06 [Nodo 1] ¡Elegido como nuevo líder!
+2025/07/07 02:49:06 [Nodo 1] Se recibió señal de elección
+2025/07/07 02:49:06 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:49:06 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:49:07 [Nodo 1] ¡Elegido como nuevo líder!
+2025/07/07 02:49:07 [Nodo 1] Se recibió señal de elección
+2025/07/07 02:49:07 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 02:49:08 [Nodo 1] Estado final: id=1, is_primary=true, last_message=2025-07-07T02:49:08Z
+2025/07/07 02:49:08 [Nodo 1] Estado final: secuencia=52, total eventos=52

@@ -221,6 +221,10 @@ func (n *Node) handleIncomingMessages() {
             for _, ev := range recovered {
                 n.applyEvent(ev)
             }
+            if err:= n.state.Save(n.cfg.StateFile); err != nil {
+                n.log("Error al persistir estado recuperado: %v", err)
+            }
+            n.log("Estado recuperado de nodo %d con %d eventos", msg.From, len(recovered))
             select { case n.heartbeatCh <- struct{}{}: default: }
 
         case transport.EnvelopeTypeSubmitEvent:
@@ -232,29 +236,13 @@ func (n *Node) handleIncomingMessages() {
             if !n.isLeader {
                 continue
             }
-            seq, err := n.ProcessEvent(req.Value)
+            seq,err := n.ProcessEvent(req.Value)
             if err != nil {
-                n.log("SubmitEvent rechazado (no soy líder): %v", err)
+                n.log("SubmitEvent rechazado(no soy lider): %v", err)
                 continue
             }
-            n.log("SubmitEvent procesado: \"%s\" (seq=%d)", req.Value, seq)
-            n.mu.RLock()
-            ev := n.state.Log[len(n.state.Log)-1]
-            n.mu.RUnlock()
-            data, err := json.Marshal(ev)
-            if err != nil {
-                n.log("Error al serializar evento para replicar: %v", err)
-                continue
-            }
-            env := &transport.Envelope{
-                Type: transport.EnvelopeTypeReplicate,
-                From: n.cfg.SelfID,
-                Seq:  seq,
-                Data: data,
-            }
-            if err := n.transport.Broadcast(env); err != nil {
-                n.log("Error al enviar Replicate: %v", err)
-            }
+            n.log("Evento recibido de %d: %s (seq=%d)", msg.From, req.Value, seq)
+
 
         case transport.EnvelopeTypeReplicate:
             var ev EventRecord
@@ -265,6 +253,9 @@ func (n *Node) handleIncomingMessages() {
             n.mu.Lock()
             n.state.Sequence = msg.Seq
             n.state.Log = append(n.state.Log, ev)
+            if err := n.state.Save(n.cfg.StateFile); err != nil {
+                n.log("Error persistiendo replica: %v", err)
+            }
             n.mu.Unlock()
 
         default:
