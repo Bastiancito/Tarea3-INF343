@@ -76,10 +76,12 @@ func (n *Node) periodicStateSave() {
 
 func (n *Node) syncState() {
     for peerID := range n.cfg.Peers {
-        if peerID > n.cfg.SelfID {
-            if err := n.rpcClient.RequestState(peerID, n.state.Sequence); err != nil {
-                n.log("Error solicitando estado a %d: %v", peerID, err)
-            }
+        if peerID == n.cfg.SelfID {
+            continue
+        }
+        n.log("Solicitando estado a nodo %d", peerID)
+        if err := n.rpcClient.RequestState(peerID, n.state.Sequence); err != nil {
+            n.log("Error solicitando estado a %d: %v", peerID, err)
+        }
         }
     }
-}

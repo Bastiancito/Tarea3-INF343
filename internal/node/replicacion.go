@@ -3,30 +3,47 @@ package node
 import (
     "encoding/json"
     "errors"
+    "fmt"
     "github.com/google/uuid"
     "github.com/Bastiancito/tarea3/internal/transport"
 )
 
 func (n *Node) ProcessEvent(value string) (uint64, error) {
-    n.mu.Lock()
-    defer n.mu.Unlock()
-
     if !n.isLeader {
         return 0, errors.New("not the leader")
     }
 
-    n.state.Sequence++
     ev := EventRecord{ID: uuid.New(), Value: value}
-    n.state.Log = append(n.state.Log, ev)
+    data := n.eventToBytes(ev)
+
+    n.mu.RLock()
+    nextSeq := n.state.Sequence + 1
+    n.mu.RUnlock()
+    n.log("Asignando sequencia %d al evento: %s", nextSeq, ev.Value)
 
     msg := &transport.Envelope{
-        Type: "Replicate",
+        Type: transport.EnvelopeTypeReplicate,
         From: n.cfg.SelfID,
-        Seq:  n.state.Sequence,
-        Data: n.eventToBytes(ev),
+        Seq:  nextSeq,
+        Data: data,
     }
-    _ = n.transport.Broadcast(msg)
-    return n.state.Sequence, nil
+
+    
+    if err := n.transport.Broadcast(msg); err!=nil{
+        n.log("Advertencia: no se pudo replicar el evento a todos los nodos: %v", err)
+    }
+
+    n.log("Evento replicado a nodos: %s (seq=%d)", ev.Value, nextSeq)
+    n.mu.Lock()
+    defer n.mu.Unlock()
+
+    n.state.Sequence = nextSeq
+    n.state.Log = append(n.state.Log, ev)
+    if err := n.state.Save(n.cfg.StateFile); err != nil {
+        return 0, fmt.Errorf("failed to save state: %v", err)
+    }
+
+    return nextSeq, nil
 }
 
 func (n *Node) eventToBytes(event EventRecord) []byte {

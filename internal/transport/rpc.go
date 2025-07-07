@@ -6,15 +6,12 @@ import (
     "net/rpc"
 )
 
-
-
 type rpcTransport struct {
-    id     int
-    addr   string
-    peers  map[int]string
-    server *rpc.Server
-    ln     net.Listener
-
+    id      int
+    addr    string
+    peers   map[int]string
+    server  *rpc.Server
+    ln      net.Listener
     msgChan chan *Envelope
 }
 
@@ -61,20 +58,29 @@ func (t *rpcTransport) Close() error {
 }
 
 func (t *rpcTransport) Broadcast(msg *Envelope) error {
-    for id := range t.peers {
+    for id, addr := range t.peers {
         if id == t.id {
-            continue
+            continue 
         }
-        _ = t.Send(id, msg)  
+        go func(peerID int, peerAddr string) {
+            client, err := rpc.Dial("tcp", peerAddr)
+            if err != nil {
+                fmt.Printf("Error conectando a nodo %d: %v\n", peerID, err)
+                return
+            }
+            defer client.Close()
+            var _reply bool
+            if err := client.Call("Node.Handle", msg, &_reply); err != nil {
+                fmt.Printf("Error RPC a nodo %d: %v\n", peerID, err)
+            }
+        }(id, addr)
     }
     return nil
 }
 
-
 func (t *rpcTransport) Addr() string {
     return t.addr
 }
-
 
 func (api *rpcAPI) Handle(msg *Envelope, ack *bool) error {
     api.parent.msgChan <- msg

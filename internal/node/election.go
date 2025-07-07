@@ -60,12 +60,22 @@ func (n *Node) becomeLeader() {
     n.isLeader = true
     n.leaderID = n.cfg.SelfID
     n.mu.Unlock()
+    n.resetElectionTimer()
+    go func(){
+        n.log("Lider %d recuperando estado de peers tras eleccion", n.cfg.SelfID)
+        n.syncState()
+    }()
 
     n.log("¡Elegido como nuevo líder!")
     _ = n.transport.Broadcast(&transport.Envelope{
-        Type: "Coordinator",
-        From: n.cfg.SelfID,
-    })
+            Type: transport.EnvelopeTypeCoordinator,
+            From: n.cfg.SelfID,
+        })  
+
+
+    
+    
+
 }
 
 func (n *Node) getHigherPeers() []int {

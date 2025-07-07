@@ -8,6 +8,7 @@ import (
   "log"
   "os"
   "sync"
+  "time"
 
   "github.com/google/uuid"
   "github.com/Bastiancito/tarea3/internal/transport"
@@ -67,6 +68,14 @@ func (n *Node) log(format string, args ...interface{}) {
     n.logger.Printf("[Nodo %d] "+format, append([]interface{}{n.cfg.SelfID}, args...)...)
 }
 
+func (n *Node) resetElectionTimer() {
+    select {
+    case <-n.heartbeatCh:
+    default:
+    }
+    n.heartbeatCh <- struct{}{}
+}
+
 func New(id int, cfgPath, transportKind string) (*Node, error) {
     cfg, err := loadConfig(cfgPath)
     if err != nil {
@@ -119,71 +128,109 @@ func (n *Node) Start() error {
         }
     }()
 
+    go func() {
+        time.Sleep(200 * time.Millisecond)
+        drainTimeout := time.After(50 * time.Millisecond)
+        for {
+            select {
+            case <-n.transport.Receive():
+            case <-drainTimeout:
+                n.log("Transportes drenados, arrancando lógica interna")
+                select {
+                case n.electionCh <- struct{}{}:
+                default:
+                }
+                return
+            }
+        }
+    }()
+
+    go n.handleIncomingMessages()
     n.syncState()
 
     go n.runLeaderElection()
-
     go n.monitorLeader()
-
     go n.periodicStateSave()
 
-    go n.handleIncomingMessages()
-    
-
+    n.StartEventSimulation(3 * time.Second)
     return nil
 }
 
+
 func (n *Node) Stop() {
+    status := struct {
+       ID           int    `json:"id"`
+       IsPrimary    bool   `json:"is_primary"`
+       LastMessage  string `json:"last_message"`
+   }{
+       ID:          n.cfg.SelfID,
+       IsPrimary:   n.isLeader,
+       LastMessage: time.Now().Format(time.RFC3339),
+   }
+   n.log("Estado final: id=%d, is_primary=%t, last_message=%s",
+       status.ID, status.IsPrimary, status.LastMessage)
+   if b, err := json.MarshalIndent(status, "", "  "); err == nil {
+       _ = os.WriteFile(
+           fmt.Sprintf("status%d.json", n.cfg.SelfID),
+           b, 0644,
+       )
+   }
     n.cancel()
     n.transport.Close()
     n.state.Save(n.cfg.StateFile)
+    n.log("Estado final: secuencia=%d, total eventos=%d",
+       n.state.Sequence, len(n.state.Log))
 }
 
 func (n *Node) handleIncomingMessages() {
     for msg := range n.transport.Receive() {
         switch msg.Type {
 
-        case "Ping":
+        case transport.EnvelopeTypePing:
             _ = n.transport.Send(msg.From, &transport.Envelope{
-                Type: "PingResponse",
+                Type: transport.EnvelopeTypePingResponse,
                 From: n.cfg.SelfID,
             })
 
-        case "PingResponse":
-            select { case n.heartbeatCh <- struct{}{}: default: }
+        case transport.EnvelopeTypePingResponse:
+            n.resetElectionTimer()
 
-        case "Election":
+        case transport.EnvelopeTypeElection:
             if msg.From < n.cfg.SelfID {
                 _ = n.transport.Send(msg.From, &transport.Envelope{
-                    Type: "Coordinator",
+                    Type: transport.EnvelopeTypeCoordinator,
                     From: n.cfg.SelfID,
                 })
             }
 
-        case "Coordinator":
+        case transport.EnvelopeTypeCoordinator:
             n.mu.Lock()
             prev := n.leaderID
             n.leaderID = msg.From
-            n.isLeader = false
+            n.isLeader = (msg.From == n.cfg.SelfID )
             n.mu.Unlock()
+            n.resetElectionTimer()
             if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
-            select { case n.heartbeatCh <- struct{}{}: default: }
+            if !n.isLeader{
+                go n.tryReintegration()
+            }
+            n.resetElectionTimer()
 
-        case "RequestState":
+        case transport.EnvelopeTypeRequestState:
             data, err := json.Marshal(n.state.Log)
             if err != nil {
                 n.log("Error al serializar estado: %v", err)
                 continue
             }
             _ = n.transport.Send(msg.From, &transport.Envelope{
-                Type: "StateResponse",
+                Type: transport.EnvelopeTypeStateResponse,
                 From: n.cfg.SelfID,
                 Data: data,
             })
 
-        case "StateResponse":
+        case transport.EnvelopeTypeStateResponse:
             var recovered []EventRecord
             if err := json.Unmarshal(msg.Data, &recovered); err != nil {
                 n.log("Error al deserializar StateResponse: %v", err)
@@ -192,18 +239,44 @@ func (n *Node) handleIncomingMessages() {
             for _, ev := range recovered {
                 n.applyEvent(ev)
             }
-            select { case n.heartbeatCh <- struct{}{}: default: }
+            if err:= n.state.Save(n.cfg.StateFile); err != nil {
+                n.log("Error al persistir estado recuperado: %v", err)
+            }
+            n.log("Estado recuperado de nodo %d con %d eventos", msg.From, len(recovered))
+            n.resetElectionTimer()
 
-        case "Replicate":
+        case transport.EnvelopeTypeSubmitEvent:
+            var req struct{ Value string }
+            if err := json.Unmarshal(msg.Data, &req); err != nil {
+                n.log("Error al decodificar SubmitEvent: %v", err)
+                continue
+            }
+            if !n.isLeader {
+                continue
+            }
+            seq,err := n.ProcessEvent(req.Value)
+            if err != nil {
+                n.log("SubmitEvent rechazado(no soy lider): %v", err)
+                continue
+            }
+            n.log("Evento recibido de %d: %s (seq=%d)", msg.From, req.Value, seq)
+
+
+        case transport.EnvelopeTypeReplicate:
             var ev EventRecord
             if err := json.Unmarshal(msg.Data, &ev); err != nil {
                 n.log("Error al decodificar Replicate: %v", err)
                 continue
             }
-            n.mu.Lock()
-            n.state.Sequence = msg.Seq
-            n.state.Log = append(n.state.Log, ev)
-            n.mu.Unlock()
+            n.applyEvent(ev)
+            n.log("Evento replicado de %d: %s (seq=%d)", msg.From, ev.Value, msg.Seq)
+            if err := n.state.Save(n.cfg.StateFile); err != nil {
+                n.log("Error al persistir evento replicado: %v", err)
+            }
+
+
+        default:
+            n.log("Mensaje desconocido de tipo %q de nodo %d", msg.Type, msg.From)
         }
     }
 }
@@ -232,7 +305,14 @@ func (n *Node) tryReintegration() {
 func (n *Node) applyEvent(ev EventRecord) {
   n.mu.Lock()
   defer n.mu.Unlock()
-  n.state.Sequence = uint64(len(n.state.Log)) + 1
+  for _, existing := range n.state.Log {
+    if existing.ID == ev.ID {
+      n.log("Evento ya existe en el log: %s (seq=%d)", ev.Value, n.state.Sequence)
+      return
+    }
+  }
+
   n.state.Log = append(n.state.Log, ev)
+  n.state.Sequence = uint64(len(n.state.Log))
   n.log("Evento aplicado: %s (seq=%d)", ev.Value, n.state.Sequence)
 }
