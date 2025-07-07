@@ -59,17 +59,21 @@ func (t *rpcTransport) Send(to int, msg *Envelope) error {
 func (t *rpcTransport) Close() error {
     return t.ln.Close()
 }
-
 func (t *rpcTransport) Broadcast(msg *Envelope) error {
-    for id := range t.peers {
+    for id, addr := range t.peers {
         if id == t.id {
             continue
         }
-        _ = t.Send(id, msg)  
+        client, err := rpc.Dial("tcp", addr)
+        if err != nil {
+            return err
+        }
+        var ack bool
+        _ = client.Call("Node.Handle", msg, &ack)
+        client.Close()
     }
     return nil
 }
-
 
 func (t *rpcTransport) Addr() string {
     return t.addr

@@ -121,6 +121,11 @@ func (n *Node) Start() error {
         }
     }()
 
+    go func(){
+        time.Sleep(200 * time.Millisecond) 
+        n.tryReintegration()
+    }()
+
     n.syncState()
 
     go n.runLeaderElection()

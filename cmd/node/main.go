@@ -25,16 +25,10 @@ func main() {
         log.Fatalf("New node: %v", err)
     }
 
-    go func() {
-        if err := nd.Start(); err != nil {
-            log.Fatalf("Node stopped: %v", err)
-        }
-    }()
+    sigs := make(chan os.Signal, 1)
+    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+    <- sigs
 
-
-    stop := make(chan os.Signal, 1)
-    signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-    <-stop
 
     log.Println("Deteniendo nodo...")
     nd.Stop()
