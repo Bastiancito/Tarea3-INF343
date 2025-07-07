@@ -79,6 +79,7 @@ func (n *Node) syncState() {
         if peerID == n.cfg.SelfID {
             continue
         }
+        n.log("Solicitando estado a nodo %d", peerID)
         if err := n.rpcClient.RequestState(peerID, n.state.Sequence); err != nil {
             n.log("Error solicitando estado a %d: %v", peerID, err)
         }

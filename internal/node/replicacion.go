@@ -19,6 +19,7 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
     n.mu.RLock()
     nextSeq := n.state.Sequence + 1
     n.mu.RUnlock()
+    n.log("Asignando sequencia %d al evento: %s", nextSeq, ev.Value)
 
     msg := &transport.Envelope{
         Type: transport.EnvelopeTypeReplicate,
@@ -30,6 +31,7 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
     if err := n.transport.Broadcast(msg); err != nil {
         return 0, fmt.Errorf("failed to broadcast event: %v", err)
     }
+    n.log("Evento replicado a nodos: %s (seq=%d)", ev.Value, nextSeq)
     n.mu.Lock()
     defer n.mu.Unlock()
 

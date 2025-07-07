@@ -30,6 +30,7 @@ func (n *Node) StartEventSimulation(interval time.Duration) {
                         n.log("Evento simulado procesado localmente (seq=%d)", seq)
                     }
                 } else {
+					n.log("Enviando evento simulado a líder: %s", value)
                     req := struct{ Value string }{Value: value}
                     data, _ := json.Marshal(req)
                     _ = n.transport.Send(n.leaderID, &transport.Envelope{

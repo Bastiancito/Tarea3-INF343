@@ -251,7 +251,7 @@ func (n *Node) handleIncomingMessages() {
                 continue
             }
             n.applyEvent(ev)
-            n.log("Evento replicado de %d: %s (seq=%d)", msg.From, ev.Value, n.state.Sequence)
+            n.log("Evento replicado de %d: %s (seq=%d)", msg.From, ev.Value, msg.Seq)
             if err := n.state.Save(n.cfg.StateFile); err != nil {
                 n.log("Error al persistir evento replicado: %v", err)
             }
