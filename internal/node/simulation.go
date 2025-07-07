@@ -22,6 +22,9 @@ func (n *Node) StartEventSimulation(interval time.Duration) {
                 isLeader := n.isLeader
                 leaderID := n.leaderID
                 n.mu.RUnlock()
+				if leaderID <0{
+					continue
+				}
 
                 value := fmt.Sprintf("SimEvent-%s", uuid.New().String()[:8])
                 n.log("Generando evento simulado: %s", value)

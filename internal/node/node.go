@@ -129,7 +129,7 @@ func (n *Node) Start() error {
     go n.handleIncomingMessages()
     n.syncState()
     go n.runLeaderElection()
-
+    select {case n.electionCh <- struct{}{}: default: }
     go n.monitorLeader()
 
     go n.periodicStateSave()

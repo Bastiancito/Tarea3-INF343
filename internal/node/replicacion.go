@@ -28,9 +28,7 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
         Data: data,
     }
 
-    if err := n.transport.Broadcast(msg); err != nil {
-        return 0, fmt.Errorf("failed to broadcast event: %v", err)
-    }
+    
     if err := n.transport.Broadcast(msg); err!=nil{
         n.log("Advertencia: no se pudo replicar el evento a todos los nodos: %v", err)
     }
