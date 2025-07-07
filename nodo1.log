@@ -1,0 +1,42 @@
+2025/07/07 01:45:00 [Nodo 1] Iniciando nodo (Transporte: rpc)
+2025/07/07 01:45:00 [Nodo 1] Nodo 1 arrancando en 0.0.0.0:5000
+2025/07/07 01:45:00 [Nodo 1] Error solicitando estado a 3: dial tcp 10.10.28.43:5002: connect: connection refused
+2025/07/07 01:45:00 [Nodo 1] Evento aplicado: SimEvent-1801b7e6 (seq=1)
+2025/07/07 01:45:00 [Nodo 1] Evento aplicado: SimEvent-907ad1d2 (seq=2)
+2025/07/07 01:45:02 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 01:45:02 [Nodo 1] Se recibió señal de elección
+2025/07/07 01:45:02 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 01:45:02 [Nodo 1] Esperando anuncio de líder de mayor ID
+2025/07/07 01:45:02 [Nodo 1] Nodo 2 se ha proclamado como líder
+2025/07/07 01:45:03 [Nodo 1] Generando evento simulado: SimEvent-abb9fadf
+2025/07/07 01:45:06 [Nodo 1] Generando evento simulado: SimEvent-0a516b05
+2025/07/07 01:45:07 [Nodo 1] Nodo 3 se ha proclamado como líder
+2025/07/07 01:45:09 [Nodo 1] Generando evento simulado: SimEvent-0c228f0e
+2025/07/07 01:45:12 [Nodo 1] Generando evento simulado: SimEvent-5a3abdc6
+2025/07/07 01:45:15 [Nodo 1] Generando evento simulado: SimEvent-8a251085
+2025/07/07 01:45:18 [Nodo 1] Generando evento simulado: SimEvent-3e76ab27
+2025/07/07 01:45:21 [Nodo 1] Generando evento simulado: SimEvent-114aa30f
+2025/07/07 01:45:24 [Nodo 1] Generando evento simulado: SimEvent-81fac01f
+2025/07/07 01:45:27 [Nodo 1] Generando evento simulado: SimEvent-cd950160
+2025/07/07 01:45:30 [Nodo 1] Generando evento simulado: SimEvent-a5beec9c
+2025/07/07 01:45:33 [Nodo 1] Generando evento simulado: SimEvent-5ad9cbf6
+2025/07/07 01:45:36 [Nodo 1] El líder 3 no responde - iniciando elección
+2025/07/07 01:45:36 [Nodo 1] Se recibió señal de elección
+2025/07/07 01:45:36 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 01:45:36 [Nodo 1] Esperando anuncio de líder de mayor ID
+2025/07/07 01:45:36 [Nodo 1] Nodo 2 se ha proclamado como líder
+2025/07/07 01:45:36 [Nodo 1] Generando evento simulado: SimEvent-693edc09
+2025/07/07 01:45:39 [Nodo 1] Generando evento simulado: SimEvent-96e40e15
+2025/07/07 01:45:42 [Nodo 1] Generando evento simulado: SimEvent-845263f0
+2025/07/07 01:45:45 [Nodo 1] Generando evento simulado: SimEvent-71dff247
+2025/07/07 01:45:48 [Nodo 1] Generando evento simulado: SimEvent-ed5c9645
+2025/07/07 01:45:51 [Nodo 1] Generando evento simulado: SimEvent-7a171c9e
+2025/07/07 01:45:54 [Nodo 1] Generando evento simulado: SimEvent-82841294
+2025/07/07 01:45:57 [Nodo 1] Generando evento simulado: SimEvent-cbbe12af
+2025/07/07 01:46:00 [Nodo 1] Generando evento simulado: SimEvent-6399adaa
+2025/07/07 01:46:03 [Nodo 1] Generando evento simulado: SimEvent-23bdd609
+2025/07/07 01:46:03 [Nodo 1] El líder 2 no responde - iniciando elección
+2025/07/07 01:46:03 [Nodo 1] Se recibió señal de elección
+2025/07/07 01:46:03 [Nodo 1] Timeout sin latidos del líder, iniciando elección
+2025/07/07 01:46:04 [Nodo 1] El líder 2 no responde - iniciando elección
+2025/07/07 01:46:04 [Nodo 1] Estado final: secuencia=49, total eventos=77
