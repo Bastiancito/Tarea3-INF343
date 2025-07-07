@@ -129,6 +129,8 @@ func (n *Node) Start() error {
     go n.periodicStateSave()
 
     go n.handleIncomingMessages()
+
+    n.StartEventSimulation(3 * time.Second)
     
 
     return nil
@@ -194,6 +196,39 @@ func (n *Node) handleIncomingMessages() {
                 n.applyEvent(ev)
             }
             select { case n.heartbeatCh <- struct{}{}: default: }
+
+        case "SubmitEvent":
+            var req struct { Value string}
+            if err:= json.Unmarshal(msg.Data, &req); err != nil {
+                n.log("Error al decodificar SubmitEvent: %v", err)
+                continue
+            }
+            if n.isLeader {
+                seq,err := n.ProcessEvent(req.Value)
+                if err != nil {
+                    n.log("No soy lider: %v", err)
+                    
+                } else {
+                    n.log("Evento procesado: %s (seq=%d)", req.Value, seq)
+                    ev := EventRecord{
+                        ID:    uuid.New(),
+                        Value: req.Value,
+                    }
+                    n.applyEvent(ev)
+
+                    // Enviar a todos los nodos
+                    msg := &transport.Envelope{
+                        Type: "Replicate",
+                        From: n.cfg.SelfID,
+                        Seq:  seq,
+                        Data: []byte(req.Value),
+                    }
+                    if err := n.transport.Broadcast(msg); err != nil {
+                        n.log("Error al enviar Replicate: %v", err)
+                    }
+                }
+
+
 
         case "Replicate":
             var ev EventRecord
