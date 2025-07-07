@@ -8,6 +8,7 @@ import (
   "log"
   "os"
   "sync"
+  "time"
 
   "github.com/google/uuid"
   "github.com/Bastiancito/tarea3/internal/transport"
@@ -140,30 +141,32 @@ func (n *Node) Stop() {
     n.cancel()
     n.transport.Close()
     n.state.Save(n.cfg.StateFile)
+    n.log("Estado final: secuencia=%d, total eventos=%d",
+      n.state.Sequence, len(n.state.Log))
 }
 
 func (n *Node) handleIncomingMessages() {
     for msg := range n.transport.Receive() {
         switch msg.Type {
 
-        case "Ping":
+        case transport.EnvelopeTypePing:
             _ = n.transport.Send(msg.From, &transport.Envelope{
-                Type: "PingResponse",
+                Type: transport.EnvelopeTypePingResponse,
                 From: n.cfg.SelfID,
             })
 
-        case "PingResponse":
+        case transport.EnvelopeTypePingResponse:
             select { case n.heartbeatCh <- struct{}{}: default: }
 
-        case "Election":
+        case transport.EnvelopeTypeElection:
             if msg.From < n.cfg.SelfID {
                 _ = n.transport.Send(msg.From, &transport.Envelope{
-                    Type: "Coordinator",
+                    Type: transport.EnvelopeTypeCoordinator,
                     From: n.cfg.SelfID,
                 })
             }
 
-        case "Coordinator":
+        case transport.EnvelopeTypeCoordinator:
             n.mu.Lock()
             prev := n.leaderID
             n.leaderID = msg.From
@@ -174,19 +177,19 @@ func (n *Node) handleIncomingMessages() {
             }
             select { case n.heartbeatCh <- struct{}{}: default: }
 
-        case "RequestState":
+        case transport.EnvelopeTypeRequestState:
             data, err := json.Marshal(n.state.Log)
             if err != nil {
                 n.log("Error al serializar estado: %v", err)
                 continue
             }
             _ = n.transport.Send(msg.From, &transport.Envelope{
-                Type: "StateResponse",
+                Type: transport.EnvelopeTypeStateResponse,
                 From: n.cfg.SelfID,
                 Data: data,
             })
 
-        case "StateResponse":
+        case transport.EnvelopeTypeStateResponse:
             var recovered []EventRecord
             if err := json.Unmarshal(msg.Data, &recovered); err != nil {
                 n.log("Error al deserializar StateResponse: %v", err)
@@ -197,40 +200,46 @@ func (n *Node) handleIncomingMessages() {
             }
             select { case n.heartbeatCh <- struct{}{}: default: }
 
-        case "SubmitEvent":
-            var req struct { Value string}
-            if err:= json.Unmarshal(msg.Data, &req); err != nil {
+        case transport.EnvelopeTypeSubmitEvent:
+            // 1) Deserializar petición
+            var req struct{ Value string }
+            if err := json.Unmarshal(msg.Data, &req); err != nil {
                 n.log("Error al decodificar SubmitEvent: %v", err)
                 continue
             }
-            if n.isLeader {
-                seq,err := n.ProcessEvent(req.Value)
-                if err != nil {
-                    n.log("No soy lider: %v", err)
-                    
-                } else {
-                    n.log("Evento procesado: %s (seq=%d)", req.Value, seq)
-                    ev := EventRecord{
-                        ID:    uuid.New(),
-                        Value: req.Value,
-                    }
-                    n.applyEvent(ev)
+            // 2) Solo el líder procesa
+            if !n.isLeader {
+                continue
+            }
+            // 3) Generar y persistir el evento
+            seq, err := n.ProcessEvent(req.Value)
+            if err != nil {
+                n.log("SubmitEvent rechazado (no soy líder): %v", err)
+                continue
+            }
+            n.log("SubmitEvent procesado: \"%s\" (seq=%d)", req.Value, seq)
+            // 4) Recuperar el EventRecord nuevo
+            n.mu.RLock()
+            ev := n.state.Log[len(n.state.Log)-1]
+            n.mu.RUnlock()
+            // 5) Serializarlo
+            data, err := json.Marshal(ev)
+            if err != nil {
+                n.log("Error al serializar evento para replicar: %v", err)
+                continue
+            }
+            // 6) Replicar a todos los secundarios
+            env := &transport.Envelope{
+                Type: transport.EnvelopeTypeReplicate,
+                From: n.cfg.SelfID,
+                Seq:  seq,
+                Data: data,
+            }
+            if err := n.transport.Broadcast(env); err != nil {
+                n.log("Error al enviar Replicate: %v", err)
+            }
 
-                    // Enviar a todos los nodos
-                    msg := &transport.Envelope{
-                        Type: "Replicate",
-                        From: n.cfg.SelfID,
-                        Seq:  seq,
-                        Data: []byte(req.Value),
-                    }
-                    if err := n.transport.Broadcast(msg); err != nil {
-                        n.log("Error al enviar Replicate: %v", err)
-                    }
-                }
-
-
-
-        case "Replicate":
+        case transport.EnvelopeTypeReplicate:
             var ev EventRecord
             if err := json.Unmarshal(msg.Data, &ev); err != nil {
                 n.log("Error al decodificar Replicate: %v", err)
@@ -240,6 +249,9 @@ func (n *Node) handleIncomingMessages() {
             n.state.Sequence = msg.Seq
             n.state.Log = append(n.state.Log, ev)
             n.mu.Unlock()
+
+        default:
+            n.log("Mensaje desconocido de tipo %q de nodo %d", msg.Type, msg.From)
         }
     }
 }
