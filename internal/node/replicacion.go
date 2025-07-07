@@ -31,10 +31,10 @@ func (n *Node) ProcessEvent(value string) (uint64, error) {
     if err := n.transport.Broadcast(msg); err != nil {
         return 0, fmt.Errorf("failed to broadcast event: %v", err)
     }
-    if err := n.transport.Broadcast(msg),err!=nil{
+    if err := n.transport.Broadcast(msg); err!=nil{
         n.log("Advertencia: no se pudo replicar el evento a todos los nodos: %v", err)
     }
-    
+
     n.log("Evento replicado a nodos: %s (seq=%d)", ev.Value, nextSeq)
     n.mu.Lock()
     defer n.mu.Unlock()
