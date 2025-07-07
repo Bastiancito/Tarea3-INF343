@@ -60,7 +60,7 @@ func (n *Node) becomeLeader() {
     n.isLeader = true
     n.leaderID = n.cfg.SelfID
     n.mu.Unlock()
-    select { case n.heartbeatCh <- struct{}{}: default: }
+    n.resetElectionTimer()
     go func(){
         n.log("Lider %d recuperando estado de peers tras eleccion", n.cfg.SelfID)
         n.syncState()

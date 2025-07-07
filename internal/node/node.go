@@ -68,6 +68,14 @@ func (n *Node) log(format string, args ...interface{}) {
     n.logger.Printf("[Nodo %d] "+format, append([]interface{}{n.cfg.SelfID}, args...)...)
 }
 
+func (n *Node) resetElectionTimer() {
+    select {
+    case <-n.heartbeatCh:
+    default:
+    }
+    n.heartbeatCh <- struct{}{}
+}
+
 func New(id int, cfgPath, transportKind string) (*Node, error) {
     cfg, err := loadConfig(cfgPath)
     if err != nil {
@@ -178,7 +186,7 @@ func (n *Node) handleIncomingMessages() {
             })
 
         case transport.EnvelopeTypePingResponse:
-            select { case n.heartbeatCh <- struct{}{}: default: }
+            n.resetElectionTimer()
 
         case transport.EnvelopeTypeElection:
             if msg.From < n.cfg.SelfID {
@@ -194,14 +202,14 @@ func (n *Node) handleIncomingMessages() {
             n.leaderID = msg.From
             n.isLeader = (msg.From == n.cfg.SelfID )
             n.mu.Unlock()
-            select { case n.heartbeatCh <- struct{}{}: default: }
+            n.resetElectionTimer()
             if prev != msg.From {
                 n.log("Nodo %d se ha proclamado como líder", msg.From)
             }
             if !n.isLeader{
                 go n.tryReintegration()
             }
-            select { case n.heartbeatCh <- struct{}{}: default: }
+            n.resetElectionTimer()
 
         case transport.EnvelopeTypeRequestState:
             data, err := json.Marshal(n.state.Log)
@@ -228,7 +236,7 @@ func (n *Node) handleIncomingMessages() {
                 n.log("Error al persistir estado recuperado: %v", err)
             }
             n.log("Estado recuperado de nodo %d con %d eventos", msg.From, len(recovered))
-            select { case n.heartbeatCh <- struct{}{}: default: }
+            n.resetElectionTimer()
 
         case transport.EnvelopeTypeSubmitEvent:
             var req struct{ Value string }
